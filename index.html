@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SOLARIS | Interactive Encyclopedia</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div id="canvas-container"></div>
+    <div id="warp-overlay"></div>
+
+    <!-- === ГЛАВНЫЙ ЭКРАН === -->
+    <div id="landing-screen" class="screen active">
+        
+        <!-- HERO СЕКЦИЯ -->
+        <section class="hero-section">
+            <h2 class="subtitle">Interactive Encyclopedia</h2>
+            <h1 class="hero-title">SOLARIS</h1>
+            <button class="start-btn" onclick="startJourney()">Запустить симуляцию 3D</button>
+            
+            <div class="scroll-indicator" onclick="document.querySelector('.solar-map-wrapper').scrollIntoView({behavior: 'smooth'})">
+                <span class="scroll-text">Explore</span>
+                <span class="arrow-down">&darr;</span>
+            </div>
+        </section>
+
+        <!-- ЗАГОЛОВОК КАРТЫ (ВЫНЕСЕН НАРУЖУ ДЛЯ БЕЗОПАСНОСТИ) -->
+        <div class="content-section" style="padding-bottom: 0;">
+            <div class="section-header">
+                <h2 class="hud-title">Орбитальная карта</h2>
+                <div class="header-line"></div>
+            </div>
+        </div>
+
+        <!-- СЕКЦИЯ: КАРТА СИСТЕМЫ (ПАНЕЛЬ ПРИБОРОВ) -->
+        <section class="content-section solar-map-wrapper">
+            
+            <!-- Левая колонка: Карта (Черный диск) -->
+            <div class="map-visual">
+                <div class="space-disc">
+                    <!-- ЛУЧ РАДАРА -->
+                    <div class="radar-beam"></div>
+
+                    <!-- СОЛНЦЕ -->
+<div class="map-sun">
+  <div class="planet-tooltip">Солнце</div>
+</div>
+
+                    <!-- ОРБИТЫ И ПЛАНЕТЫ -->
+                    <!-- ОРБИТЫ И ПЛАНЕТЫ -->
+                    <div class="orbit-ring mercury-orbit">
+                        <div class="map-planet mercury-body">
+                            <div class="planet-tooltip">Меркурий</div>
+                        </div>
+                    </div>
+
+                    <div class="orbit-ring venus-orbit">
+                        <div class="map-planet venus-body">
+                            <div class="planet-tooltip">Венера</div>
+                        </div>
+                    </div>
+
+                    <div class="orbit-ring earth-orbit">
+                        <div class="map-planet earth-body">
+                            <div class="planet-tooltip">Земля</div>
+                        </div>
+                    </div>
+
+                    <div class="orbit-ring mars-orbit">
+                        <div class="map-planet mars-body">
+                            <div class="planet-tooltip">Марс</div>
+                        </div>
+                    </div>
+
+                    <div class="orbit-ring jupiter-orbit">
+                        <div class="map-planet jupiter-body">
+                            <div class="planet-tooltip">Юпитер</div>
+                        </div>
+                    </div>
+                    
+                    <div class="orbit-ring saturn-orbit">
+                        <div class="map-planet saturn-body">
+                            <div class="saturn-rings"></div>
+                            <div class="planet-tooltip">Сатурн</div>
+                        </div>
+                    </div>
+                    
+                    <div class="orbit-ring uranus-orbit">
+                        <div class="map-planet uranus-body">
+                            <div class="planet-tooltip">Уран</div>
+                        </div>
+                    </div>
+
+                    <div class="orbit-ring neptune-orbit">
+                        <div class="map-planet neptune-body">
+                            <div class="planet-tooltip">Нептун</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Правая колонка: Данные и Слайдер -->
+            <div class="map-data-panel">
+                <h3>Статус системы</h3>
+                
+                <div class="data-row">
+                    <span class="label">Координаты</span>
+                    <span class="value blink">17ч 45м 40с</span>
+                </div>
+                <div class="data-row">
+                    <span class="label">Орбитальная скорость</span>
+                    <span class="value">220 км/с</span>
+                </div>
+                <div class="data-row">
+                    <span class="label">Объекты</span>
+                    <span class="value" style="color: var(--color-sun)">8 Планет</span>
+                </div>
+                
+                <hr style="border-color: #333; margin: 20px 0;">
+                
+                <!-- Слайдер фактов -->
+                <div class="facts-slider">
+                    <!-- Факт 1 -->
+                    <div class="fact-slide active">
+                        <p class="smart-text">
+                            Солнечная система находится в рукаве Ориона. Все планеты движутся в одной плоскости (эклиптике), подчиняясь законам Кеплера.
+                        </p>
+                    </div>
+                    <!-- Факт 2 -->
+                    <div class="fact-slide">
+                        <p class="smart-text">
+                            Юпитер настолько массивен, что его гравитация защищает Землю, притягивая к себе опасные кометы и астероиды как щит.
+                        </p>
+                    </div>
+                    <!-- Факт 3 -->
+                    <div class="fact-slide">
+                        <p class="smart-text">
+                            На Венере идет дождь из серной кислоты, но он испаряется, не долетая до поверхности из-за чудовищной жары в 460°C.
+                        </p>
+                    </div>
+                    <!-- Факт 4 -->
+                    <div class="fact-slide">
+                        <p class="smart-text">
+                            Самая высокая гора в системе — Олимп на Марсе. Её высота 26 км, что в 3 раза выше Эвереста.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Контролы слайдера -->
+                <div class="slider-controls">
+                    <div class="slider-dot active" onclick="setSlide(0)"></div>
+                    <div class="slider-dot" onclick="setSlide(1)"></div>
+                    <div class="slider-dot" onclick="setSlide(2)"></div>
+                    <div class="slider-dot" onclick="setSlide(3)"></div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- СЕКЦИЯ: БИБЛИОТЕКА -->
+        <section class="content-section">
+            
+            <div class="section-header">
+                <h2 class="hud-title">Справочник объектов</h2>
+                <div class="header-line"></div>
+            </div>
+
+            <div class="library-grid">
+                <div class="lib-card">
+                    <h3>Планеты</h3>
+                    <p>8 основных планет системы</p>
+                </div>
+                <div class="lib-card">
+                    <h3>Звезды</h3>
+                    <p>Типы звезд и их эволюция</p>
+                </div>
+                <div class="lib-card">
+                    <h3>Черные дыры</h3>
+                    <p>Загадки гравитации</p>
+                </div>
+            </div>
+        </section>
+
+        <footer>
+            <p>Created with Vibe Coding & AI</p>
+        </footer>
+    </div>
+
+    <!-- === ЭКРАН 3D === -->
+    <div id="explorer-screen" class="screen hidden">
+        <button class="exit-btn" onclick="exitJourney()">&times;</button>
+        <div class="info-panel" id="info-panel">
+            <div class="planet-type" id="p-type">Type</div>
+            <h1 class="planet-title" id="p-name">NAME</h1>
+            <p class="planet-desc" id="p-desc">Desc...</p>
+        </div>
+        <div class="nav-dock"></div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="main.js"></script>
+</body>
+</html>
