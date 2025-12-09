@@ -1,206 +1,827 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SOLARIS | Interactive Encyclopedia</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SOLARIS | Interactive Encyclopedia</title>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@300;600&display=swap');
+
+    :root {
+      --color-blue: #00d2ff;
+      --color-purple: #bc13fe;
+      --color-sun: #ffd700;
+      --bg-dark: #050505;
+      --glass: rgba(255, 255, 255, 0.05);
+      --section-gap: 130px;
+      --title-gap: 24px;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg-dark);
+      font-family: 'Exo 2', sans-serif;
+      color: white;
+      overflow-x: hidden;
+    }
+
+    /* полноэкранный фон под сцену */
+    #canvas-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+      pointer-events: none;
+    }
+
+    /* прозрачный слой с кольцом частиц */
+    #space-layer {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+
+    .screen {
+      width: 100%;
+      min-height: 100vh;
+      transition: opacity 1s ease;
+    }
+    .screen.hidden {
+      display: none;
+      opacity: 0;
+    }
+    .screen.active {
+      display: block;
+      opacity: 1;
+    }
+
+    .page-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 40px;
+    }
+
+    .section-block {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 40px;
+      margin-block: var(--section-gap);
+    }
+
+    #landing-screen {
+      position: relative;
+      z-index: 10;
+      overflow-y: auto;
+    }
+
+    .hero-section {
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      position: relative;
+    }
+
+    .subtitle {
+      color: var(--color-blue);
+      letter-spacing: 6px;
+      text-transform: uppercase;
+      margin-bottom: 15px;
+      font-size: 1rem;
+      text-shadow: 0 0 10px rgba(0, 210, 255, 0.5);
+    }
+    .hero-title {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 7rem;
+      font-weight: 900;
+      margin: 0;
+      background: linear-gradient(
+        135deg,
+        #fff 0%,
+        var(--color-blue) 50%,
+        var(--color-purple) 100%
+      );
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      filter: drop-shadow(0 0 20px rgba(0, 210, 255, 0.3));
+    }
+
+    .hero-text {
+      margin-top: -90px;
+    }
+
+    .hero-planet-spacer {
+      height: 220px;
+      margin: 30px 0;
+    }
+
+    .start-btn {
+      margin-top: -5px;
+      padding: 20px 60px;
+      font-size: 1.2rem;
+      background: transparent;
+      border-radius: 50px;
+      border: 2px solid var(--color-blue);
+      color: var(--color-blue);
+      font-family: 'Orbitron', sans-serif;
+      cursor: pointer;
+      transition: 0.4s;
+      text-transform: uppercase;
+      letter-spacing: 3px;
+    }
+    .start-btn:hover {
+      border-color: var(--color-sun);
+      color: var(--color-sun);
+      box-shadow: 0 0 40px var(--color-sun), inset 0 0 10px var(--color-sun);
+      transform: scale(1.05);
+    }
+
+    .scroll-indicator {
+      position: absolute;
+      bottom: 50px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 5px;
+      cursor: pointer;
+      opacity: 0.7;
+      transition: 0.3s;
+      z-index: 20;
+    }
+    .scroll-text {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 3px;
+      color: #888;
+    }
+    .arrow-down {
+      font-size: 1.5rem;
+      color: #888;
+      animation: bounce 2s infinite;
+    }
+    .scroll-indicator:hover {
+      opacity: 1;
+    }
+    .scroll-indicator:hover .scroll-text,
+    .scroll-indicator:hover .arrow-down {
+      color: white;
+    }
+
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(10px); }
+    }
+
+    .content-section { padding-block: 0; }
+    .content-section > h2 { display: none; }
+
+    .section-header {
+      width: 100%;
+      margin: 0 0 var(--title-gap) 0;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: all 0.7s ease-out;
+      text-align: left;
+    }
+    .section-header.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .hud-title {
+      font-family: 'Exo 2', sans-serif;
+      font-size: 2.6rem;
+      font-weight: 600;
+      text-transform: none;
+      color: #ffffff;
+      margin: 0;
+      letter-spacing: 0.02em;
+      text-align: left;
+    }
+
+    .header-line { display: none; }
+
+    /* Блоки с контентом */
+    .solar-map-wrapper {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 40px;
+      background: rgba(10, 10, 12, 0.9);
+      border-radius: 30px;
+      padding: 35px 40px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+    }
+
+    /* Простая стилизация для текстовых блоков (Структура, Шкала) */
+    .info-block-content {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 20px;
+      padding: 40px;
+      color: #ccc;
+      line-height: 1.6;
+      font-size: 1.1rem;
+    }
+    .info-block-content p {
+      margin-bottom: 20px;
+    }
+    .info-block-content p:last-child {
+      margin-bottom: 0;
+    }
+
+    /* Библиотека кнопок */
+    .library-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      column-gap: 20px;
+      row-gap: 20px; /* добавил отступ между рядами */
+      width: 100%;
+    }
+
+    .lib-pill {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 24px;
+      border-radius: 18px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      background: rgba(255, 255, 255, 0.03);
+      font: inherit;
+      color: #fff;
+      cursor: pointer;
+      transition: 0.25s ease;
+      text-align: left;
+      width: 100%;
+      box-sizing: border-box;
+      min-height: 120px; /* чтобы кнопки были одной высоты */
+    }
+
+    .lib-pill-title {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.1rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--color-blue);
+      margin-bottom: 8px;
+    }
+
+    .lib-pill-sub {
+      font-size: 0.9rem;
+      color: #999;
+      line-height: 1.4;
+    }
+
+    .lib-pill:hover {
+      border-color: var(--color-sun);
+      background: rgba(255, 215, 0, 0.07);
+      box-shadow: 0 0 18px rgba(255, 215, 0, 0.35);
+      transform: translateY(-4px);
+    }
+
+    .library-footer {
+      margin-top: 24px;
+      text-align: left;
+      color: #555;
+      font-size: 0.8rem;
+    }
+
+    /* 3D Экран */
+    #explorer-screen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 100vh;
+      display: flex;
+      justify-content: space-between;
+      pointer-events: none;
+    }
+    .info-panel, .nav-dock, .exit-btn {
+      pointer-events: auto;
+    }
+
+    .exit-btn {
+      position: absolute;
+      top: 30px;
+      left: 30px;
+      z-index: 100;
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background: rgba(0, 0, 0, 0.5);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: white;
+      font-size: 1.5rem;
+      cursor: pointer;
+      transition: 0.3s;
+      backdrop-filter: blur(5px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .exit-btn:hover {
+      background: var(--color-sun);
+      color: black;
+      border-color: var(--color-sun);
+      transform: rotate(90deg);
+    }
+
+    .info-panel {
+      width: 350px;
+      height: 100%;
+      padding: 60px;
+      background: rgba(0, 0, 0, 0.4);
+      backdrop-filter: blur(8px);
+      border-right: 1px solid rgba(255, 255, 255, 0.05);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      transform: translateX(-100px);
+      opacity: 0;
+      transition: 1s ease;
+    }
+    .info-panel.visible {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .planet-title {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 4rem;
+      margin: 0;
+      background: linear-gradient(90deg, #fff, #aaa);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-align: left;
+    }
+    .planet-type {
+      color: var(--color-blue);
+      text-transform: uppercase;
+      margin-bottom: 15px;
+      letter-spacing: 2px;
+      font-weight: bold;
+      text-align: left;
+    }
+    .planet-desc {
+      color: #ccc;
+      line-height: 1.7;
+      text-align: left;
+    }
+
+    .nav-dock {
+      position: absolute;
+      bottom: 50px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 20px;
+      background: rgba(0, 0, 0, 0.5);
+      padding: 15px 25px;
+      border-radius: 50px;
+      backdrop-filter: blur(5px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .planet-btn {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      background: transparent;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+    .planet-btn:hover {
+      background: var(--color-sun);
+      border-color: var(--color-sun);
+      box-shadow: 0 0 10px var(--color-sun);
+    }
+    .planet-btn.active {
+      background: var(--color-sun);
+      border-color: var(--color-sun);
+      transform: scale(1.4);
+      box-shadow: 0 0 20px var(--color-sun);
+    }
+
+    #warp-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: white;
+      z-index: 999;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.5s;
+    }
+
+    @media (max-width: 1000px) {
+      .page-container, .section-block { padding: 0 20px; }
+      .solar-map-wrapper { flex-direction: column; padding: 30px; }
+      .map-visual { width: 100%; max-width: 400px; height: 400px; }
+      .space-disc { width: 100%; height: 100%; }
+      .library-row { grid-template-columns: 1fr; row-gap: 12px; }
+    }
+  </style>
 </head>
 <body>
+  <div id="canvas-container"></div>
+  <div id="warp-overlay"></div>
 
-    <div id="canvas-container"></div>
-    <div id="warp-overlay"></div>
-
-    <!-- === ГЛАВНЫЙ ЭКРАН === -->
-    <div id="landing-screen" class="screen active">
-        
-        <!-- HERO СЕКЦИЯ -->
-        <section class="hero-section">
-            <h2 class="subtitle">Interactive Encyclopedia</h2>
-            <h1 class="hero-title">SOLARIS</h1>
-            <button class="start-btn" onclick="startJourney()">Запустить симуляцию 3D</button>
-            
-            <div class="scroll-indicator" onclick="document.querySelector('.solar-map-wrapper').scrollIntoView({behavior: 'smooth'})">
-                <span class="scroll-text">Explore</span>
-                <span class="arrow-down">&darr;</span>
-            </div>
-        </section>
-
-        <!-- ЗАГОЛОВОК КАРТЫ (ВЫНЕСЕН НАРУЖУ ДЛЯ БЕЗОПАСНОСТИ) -->
-        <div class="content-section" style="padding-bottom: 0;">
-            <div class="section-header">
-                <h2 class="hud-title">Орбитальная карта</h2>
-                <div class="header-line"></div>
-            </div>
+  <div id="landing-screen" class="screen active">
+    <div class="page-container">
+      <section class="hero-section">
+        <div class="hero-text">
+          <h2 class="subtitle">Interactive Encyclopedia</h2>
+          <h1 class="hero-title">SOLARIS</h1>
         </div>
 
-        <!-- СЕКЦИЯ: КАРТА СИСТЕМЫ (ПАНЕЛЬ ПРИБОРОВ) -->
-        <section class="content-section solar-map-wrapper">
-            
-            <!-- Левая колонка: Карта (Черный диск) -->
-            <div class="map-visual">
-                <div class="space-disc">
-                    <!-- ЛУЧ РАДАРА -->
-                    <div class="radar-beam"></div>
+        <div class="hero-planet-spacer"></div>
 
-                    <!-- СОЛНЦЕ -->
-<div class="map-sun">
-  <div class="planet-tooltip">Солнце</div>
+        <button class="start-btn" onclick="startJourney()">
+          Запустить симуляцию 3D
+        </button>
+
+        <div class="scroll-indicator" onclick="scrollToSection()">
+          <span class="scroll-text">Исследовать</span>
+          <span class="arrow-down">&darr;</span>
+        </div>
+      </section>
+    </div>
+
+    <!-- БЛОК 1: Орбитальная карта -->
+    <div class="section-block">
+      <div class="section-header">
+        <h2 class="hud-title">Орбитальная карта</h2>
+        <div class="header-line"></div>
+      </div>
+      <section class="content-section solar-map-wrapper">
+        <iframe src="solar-orbit.html" style="width: 100%; height: 600px; border: none"></iframe>
+      </section>
+    </div>
+
+    <!-- БЛОК 2: Структура Вселенной -->
+    <div class="section-block">
+      <div class="section-header">
+        <h2 class="hud-title">Структура Вселенной</h2>
+        <div class="header-line"></div>
+      </div>
+      <section class="content-section info-block-content">
+        <p>Вселенная имеет сложную ячеистую структуру, напоминающую космическую паутину. Галактики не разбросаны хаотично, а собраны в скопления и сверхскопления, которые выстраиваются в гигантские нити (филаменты), разделенные огромными пустотами — войдами.</p>
+        <p>Эти структуры простираются на миллиарды световых лет и формировались под действием гравитации тёмной материи с момента Большого взрыва.</p>
+      </section>
+    </div>
+
+    <!-- БЛОК 3: Временная шкала -->
+    <div class="section-block">
+      <div class="section-header">
+        <h2 class="hud-title">Временная шкала</h2>
+        <div class="header-line"></div>
+      </div>
+      <section class="content-section info-block-content">
+        <p><strong>13.8 млрд лет назад:</strong> Большой взрыв. Рождение пространства и времени.</p>
+        <p><strong>380 000 лет спустя:</strong> Вселенная становится прозрачной, появляется реликтовое излучение.</p>
+        <p><strong>400 млн лет спустя:</strong> Загораются первые звёзды и формируются первые галактики.</p>
+        <p><strong>9 млрд лет спустя:</strong> Формируется Солнечная система и Земля.</p>
+      </section>
+    </div>
+
+    <!-- БЛОК 4: Справочник объектов -->
+    <div class="section-block">
+      <div class="section-header">
+        <h2 class="hud-title">Справочник объектов</h2>
+        <div class="header-line"></div>
+      </div>
+
+      <section class="content-section">
+        <div class="library-row">
+          <!-- Старые кнопки -->
+          <button class="lib-pill">
+            <span class="lib-pill-title">Планеты</span>
+            <span class="lib-pill-sub">8 основных планет системы</span>
+          </button>
+          <button class="lib-pill">
+            <span class="lib-pill-title">Звезды</span>
+            <span class="lib-pill-sub">Типы звезд и их эволюция</span>
+          </button>
+          <button class="lib-pill">
+            <span class="lib-pill-title">Черные дыры</span>
+            <span class="lib-pill-sub">Загадки гравитации</span>
+          </button>
+
+          <!-- Новые кнопки -->
+          <button class="lib-pill">
+            <span class="lib-pill-title">Космическая техника</span>
+            <span class="lib-pill-sub">Ракеты, корабли, спутники</span>
+          </button>
+          <button class="lib-pill">
+            <span class="lib-pill-title">Малые тела</span>
+            <span class="lib-pill-sub">Кометы, астероиды и метеориты</span>
+          </button>
+          <button class="lib-pill">
+            <span class="lib-pill-title">Ночное небо</span>
+            <span class="lib-pill-sub">Созвездия и гид наблюдателя</span>
+          </button>
+        </div>
+
+        <div class="library-footer">
+          <p>Created with Vibe Coding & AI</p>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <!-- 3D Exploration Screen -->
+<!-- ЭКРАН СИМУЛЯЦИИ 3D -->
+<div id="explorer-screen" class="screen hidden">
+  <!-- Кнопка выхода -->
+  <button class="exit-btn" onclick="exitJourney()">&times;</button>
+
+  <!-- Левая инфо‑панель -->
+  <div class="info-panel" id="info-panel">
+    <div class="planet-type" id="p-type">Звезда G2V</div>
+    <h1 class="planet-title" id="p-name">СОЛНЦЕ</h1>
+    <p class="planet-desc" id="p-desc">
+      Звезда главной последовательности класса G. Масса Солнца составляет
+      99,86 % от суммарной массы всей Солнечной системы.
+    </p>
+  </div>
+
+  <!-- Нижняя док‑панель для планет -->
+  <div class="nav-dock">
+    <button class="planet-btn" data-index="0"></button>
+    <button class="planet-btn" data-index="1"></button>
+    <button class="planet-btn" data-index="2"></button>
+    <button class="planet-btn" data-index="3"></button>
+    <button class="planet-btn" data-index="4"></button>
+    <button class="planet-btn" data-index="5"></button>
+  </div>
 </div>
 
-                    <!-- ОРБИТЫ И ПЛАНЕТЫ -->
-                    <!-- ОРБИТЫ И ПЛАНЕТЫ -->
-                    <div class="orbit-ring mercury-orbit">
-                        <div class="map-planet mercury-body">
-                            <div class="planet-tooltip">Меркурий</div>
-                        </div>
-                    </div>
 
-                    <div class="orbit-ring venus-orbit">
-                        <div class="map-planet venus-body">
-                            <div class="planet-tooltip">Венера</div>
-                        </div>
-                    </div>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
 
-                    <div class="orbit-ring earth-orbit">
-                        <div class="map-planet earth-body">
-                            <div class="planet-tooltip">Земля</div>
-                        </div>
-                    </div>
+  <script>
+    const planets = [
+      { key: 'sun', name: 'СОЛНЦЕ', type: 'Звезда G2V', texture: 'textures/sun.jpg', desc: 'Звезда главной последовательности класса G. Масса Солнца составляет 99,86 % от суммарной массы всей Солнечной системы.' },
+      { key: 'mercury', name: 'МЕРКУРИЙ', type: 'Каменная планета', texture: 'textures/mercury.jpg', desc: 'Самая маленькая планета системы. Температура на поверхности колеблется от −173 °C до +427 °C.' },
+      { key: 'venus', name: 'ВЕНЕРА', type: 'Токсичный мир', texture: 'textures/venus.jpg', desc: 'Вторая планета от Солнца. Имеет плотную атмосферу из углекислого газа, создающую невероятный парниковый эффект.' },
+      { key: 'earth', name: 'ЗЕМЛЯ', type: 'Наш дом', texture: 'textures/earth.jpg', desc: 'Колыбель человечества. Единственное известное тело во Вселенной, населенное живыми организмами.' },
+      { key: 'mars', name: 'МАРС', type: 'Красная планета', texture: 'textures/mars.jpg', desc: 'Планета с разряженной атмосферой. Особенности рельефа — ударные кратеры, вулканы, долины и пустыни.' },
+      { key: 'jupiter', name: 'ЮПИТЕР', type: 'Газовый гигант', texture: 'textures/jupiter.jpg', desc: 'Крупнейшая планета Солнечной системы. Ряд атмосферных явлений на Юпитере — штормы, молнии, полярные сияния.' }
+    ];
 
-                    <div class="orbit-ring mars-orbit">
-                        <div class="map-planet mars-body">
-                            <div class="planet-tooltip">Марс</div>
-                        </div>
-                    </div>
+    let currentPlanetIndex = 0;
+    let isExploring = false;
 
-                    <div class="orbit-ring jupiter-orbit">
-                        <div class="map-planet jupiter-body">
-                            <div class="planet-tooltip">Юпитер</div>
-                        </div>
-                    </div>
-                    
-                    <div class="orbit-ring saturn-orbit">
-                        <div class="map-planet saturn-body">
-                            <div class="saturn-rings"></div>
-                            <div class="planet-tooltip">Сатурн</div>
-                        </div>
-                    </div>
-                    
-                    <div class="orbit-ring uranus-orbit">
-                        <div class="map-planet uranus-body">
-                            <div class="planet-tooltip">Уран</div>
-                        </div>
-                    </div>
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    document.getElementById('canvas-container').appendChild(renderer.domElement);
 
-                    <div class="orbit-ring neptune-orbit">
-                        <div class="map-planet neptune-body">
-                            <div class="planet-tooltip">Нептун</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+    const spaceCanvas = document.createElement('canvas');
+    spaceCanvas.id = 'space-layer';
+    document.getElementById('canvas-container').appendChild(spaceCanvas);
 
-            <!-- Правая колонка: Данные и Слайдер -->
-            <div class="map-data-panel">
-                <h3>Статус системы</h3>
-                
-                <div class="data-row">
-                    <span class="label">Координаты</span>
-                    <span class="value blink">17ч 45м 40с</span>
-                </div>
-                <div class="data-row">
-                    <span class="label">Орбитальная скорость</span>
-                    <span class="value">220 км/с</span>
-                </div>
-                <div class="data-row">
-                    <span class="label">Объекты</span>
-                    <span class="value" style="color: var(--color-sun)">8 Планет</span>
-                </div>
-                
-                <hr style="border-color: #333; margin: 20px 0;">
-                
-                <!-- Слайдер фактов -->
-                <div class="facts-slider">
-                    <!-- Факт 1 -->
-                    <div class="fact-slide active">
-                        <p class="smart-text">
-                            Солнечная система находится в рукаве Ориона. Все планеты движутся в одной плоскости (эклиптике), подчиняясь законам Кеплера.
-                        </p>
-                    </div>
-                    <!-- Факт 2 -->
-                    <div class="fact-slide">
-                        <p class="smart-text">
-                            Юпитер настолько массивен, что его гравитация защищает Землю, притягивая к себе опасные кометы и астероиды как щит.
-                        </p>
-                    </div>
-                    <!-- Факт 3 -->
-                    <div class="fact-slide">
-                        <p class="smart-text">
-                            На Венере идет дождь из серной кислоты, но он испаряется, не долетая до поверхности из-за чудовищной жары в 460°C.
-                        </p>
-                    </div>
-                    <!-- Факт 4 -->
-                    <div class="fact-slide">
-                        <p class="smart-text">
-                            Самая высокая гора в системе — Олимп на Марсе. Её высота 26 км, что в 3 раза выше Эвереста.
-                        </p>
-                    </div>
-                </div>
+    const planetGroup = new THREE.Group();
+    scene.add(planetGroup);
+    planetGroup.position.set(-0.5, 0, 0);
 
-                <!-- Контролы слайдера -->
-                <div class="slider-controls">
-                    <div class="slider-dot active" onclick="setSlide(0)"></div>
-                    <div class="slider-dot" onclick="setSlide(1)"></div>
-                    <div class="slider-dot" onclick="setSlide(2)"></div>
-                    <div class="slider-dot" onclick="setSlide(3)"></div>
-                </div>
+    const geometry = new THREE.SphereGeometry(4, 64, 64);
+    const material = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.8, metalness: 0.1, transparent: true, opacity: 1 });
+    const planetMesh = new THREE.Mesh(geometry, material);
+    planetGroup.add(planetMesh);
 
-            </div>
-        </section>
+    const sunLight = new THREE.DirectionalLight(0xffffff, 1.2);
+    sunLight.position.set(10, 10, 20);
+    scene.add(sunLight);
+    const rimLight = new THREE.SpotLight(0x00d2ff, 2);
+    rimLight.position.set(-10, 10, -5);
+    rimLight.lookAt(0, 0, 0);
+    scene.add(rimLight);
+    const ambientLight = new THREE.AmbientLight(0x404040, 0.3);
+    scene.add(ambientLight);
 
-        <!-- СЕКЦИЯ: БИБЛИОТЕКА -->
-        <section class="content-section">
-            
-            <div class="section-header">
-                <h2 class="hud-title">Справочник объектов</h2>
-                <div class="header-line"></div>
-            </div>
+    const starsGeometry = new THREE.BufferGeometry();
+    const starsCount = 5000;
+    const posArray = new Float32Array(starsCount * 3);
+    for (let i = 0; i < starsCount * 3; i++) { posArray[i] = (Math.random() - 0.5) * 600; }
+    starsGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+    const starsMaterial = new THREE.PointsMaterial({ size: 0.15, color: 0xffffff, transparent: true, opacity: 0.8 });
+    const starsMesh = new THREE.Points(starsGeometry, starsMaterial);
+    scene.add(starsMesh);
 
-            <div class="library-grid">
-                <div class="lib-card">
-                    <h3>Планеты</h3>
-                    <p>8 основных планет системы</p>
-                </div>
-                <div class="lib-card">
-                    <h3>Звезды</h3>
-                    <p>Типы звезд и их эволюция</p>
-                </div>
-                <div class="lib-card">
-                    <h3>Черные дыры</h3>
-                    <p>Загадки гравитации</p>
-                </div>
-            </div>
-        </section>
+    camera.position.set(0, 0, 40);
+    camera.lookAt(0, 0, 0);
 
-        <footer>
-            <p>Created with Vibe Coding & AI</p>
-        </footer>
-    </div>
+    window.addEventListener('scroll', () => {
+      if (isExploring) return;
+      const scrollY = window.scrollY;
+      const fadeEnd = 400;
+      let opacity = 1 - scrollY / fadeEnd;
+      if (opacity < 0) opacity = 0;
+      planetMesh.material.opacity = opacity;
+      planetMesh.visible = opacity > 0.05;
+      spaceCanvas.style.opacity = opacity;
+    });
 
-    <!-- === ЭКРАН 3D === -->
-    <div id="explorer-screen" class="screen hidden">
-        <button class="exit-btn" onclick="exitJourney()">&times;</button>
-        <div class="info-panel" id="info-panel">
-            <div class="planet-type" id="p-type">Type</div>
-            <h1 class="planet-title" id="p-name">NAME</h1>
-            <p class="planet-desc" id="p-desc">Desc...</p>
-        </div>
-        <div class="nav-dock"></div>
-    </div>
+    function animate() {
+      requestAnimationFrame(animate);
+      planetMesh.rotation.y += 0.0015;
+      if (isExploring) {
+        starsMesh.position.z += 0.1;
+        if (starsMesh.position.z > 200) starsMesh.position.z = -200;
+        planetGroup.rotation.z = Math.sin(Date.now() * 0.0005) * 0.05;
+      } else {
+        starsMesh.rotation.y += 0.0002;
+      }
+      renderer.render(scene, camera);
+    }
+    animate();
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
-    <script src="main.js"></script>
+    window.startJourney = function () {
+      isExploring = true;
+      planetMesh.visible = true;
+      planetMesh.material.opacity = 1;
+      spaceCanvas.style.opacity = 1;
+      const landing = document.getElementById('landing-screen');
+      landing.classList.remove('active');
+      setTimeout(() => landing.classList.add('hidden'), 500);
+      gsap.to(starsMesh.scale, { z: 5, duration: 1.5, ease: 'power2.in' });
+      gsap.to(camera.position, { z: 20, duration: 2, ease: 'power2.inOut' });
+      const overlay = document.getElementById('warp-overlay');
+      setTimeout(() => {
+        overlay.style.opacity = '1';
+        loadPlanetData(0);
+        document.getElementById('explorer-screen').classList.remove('hidden');
+        setTimeout(() => document.getElementById('explorer-screen').classList.add('active'), 10);
+        setTimeout(() => {
+          overlay.style.opacity = '0';
+          document.getElementById('info-panel').classList.add('visible');
+          gsap.to(starsMesh.scale, { z: 1, duration: 2 });
+        }, 500);
+      }, 1500);
+    };
+
+    window.exitJourney = function () {
+      isExploring = false;
+      document.getElementById('info-panel').classList.remove('visible');
+      const explorer = document.getElementById('explorer-screen');
+      explorer.classList.remove('active');
+      setTimeout(() => explorer.classList.add('hidden'), 500);
+      gsap.to(starsMesh.scale, { z: 5, duration: 1, ease: 'power2.in' });
+      const overlay = document.getElementById('warp-overlay');
+      setTimeout(() => {
+        overlay.style.opacity = '1';
+        const landing = document.getElementById('landing-screen');
+        landing.classList.remove('hidden');
+        setTimeout(() => landing.classList.add('active'), 10);
+        gsap.to(camera.position, { z: 40, duration: 1.5, ease: 'power2.out' });
+        window.scrollTo(0, 0);
+        setTimeout(() => {
+          overlay.style.opacity = '0';
+          gsap.to(starsMesh.scale, { z: 1, duration: 2 });
+        }, 500);
+      }, 1000);
+    };
+
+    const textureLoader = new THREE.TextureLoader();
+    function loadPlanetData(index) {
+      const data = planets[index];
+      document.getElementById('p-name').innerText = data.name;
+      document.getElementById('p-type').innerText = data.type;
+      document.getElementById('p-desc').innerText = data.desc;
+      textureLoader.load(data.texture, tex => {
+        planetMesh.material.map = tex;
+        planetMesh.material.needsUpdate = true;
+      }, undefined, () => {
+        planetMesh.material.color.setHex(0x555555);
+        planetMesh.material.map = null;
+        planetMesh.material.needsUpdate = true;
+      });
+    }
+
+// навигация по планетам в нижнем доке
+const dock = document.querySelector('.nav-dock');
+const dockButtons = dock.querySelectorAll('.planet-btn');
+
+dockButtons.forEach((btn, index) => {
+  btn.addEventListener('click', () => {
+    currentPlanetIndex = index;
+    loadPlanetData(currentPlanetIndex);
+
+    dockButtons.forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  });
+});
+
+// активируем первую планету по умолчанию
+if (dockButtons.length) {
+  dockButtons[0].classList.add('active');
+  loadPlanetData(0);
+}
+
+
+
+    const observerOptions = { threshold: 0.1 };
+    const observer = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) entry.target.classList.add('visible');
+      });
+    }, observerOptions);
+    document.querySelectorAll('.section-header').forEach(header => observer.observe(header));
+
+    var Space = (function () {
+      function Space(canvas) {
+        this.canvas = canvas;
+        this.ctx = this.canvas.getContext('2d');
+        this.particles = [];
+        this.ratio = window.innerHeight < 400 ? 0.6 : 1;
+        this.r = 80;
+        this.counter = 0;
+      }
+      Space.prototype.init = function () {
+        this.createElement();
+        this.loop();
+        window.addEventListener('resize', this.createElement.bind(this));
+      };
+      Space.prototype.createElement = function () {
+        var scale = this.ratio;
+        this.canvas.width = window.innerWidth;
+        this.canvas.height = window.innerHeight;
+        this.ctx.setTransform(1, 0, 0, 1, 0, 0);
+        this.ctx.transform(scale, 0, 0, -scale, this.canvas.width / 2, this.canvas.height / 2);
+        this.particles = [];
+        this.counter = 0;
+        for (var i = 0; i < 450; i++) this.createParticle();
+      };
+      Space.prototype.createParticle = function () {
+        this.particles.push({
+          color: Math.random() > 0.5 ? "rgba(255, 255, 255, 1)" : "rgba(255, 255, 255, 0.4)",
+          radius: Math.random() * 5 / 1.5,
+          x: Math.cos(Math.random() * 7 + Math.PI) * this.r,
+          y: Math.sin(Math.random() * 7 + Math.PI) * this.r,
+          ring: Math.random() * this.r * 3,
+          move: ((Math.random() * 4) + 1) / 500,
+          random: Math.random() * 7
+        });
+      };
+      Space.prototype.moveParticle = function (p) {
+        p.ring = Math.max(p.ring - 1, this.r);
+        p.random += p.move;
+        p.x = Math.cos(p.random + Math.PI) * p.ring;
+        p.y = Math.sin(p.random + Math.PI) * p.ring;
+      };
+      Space.prototype.resetParticle = function (p) {
+        p.ring = Math.random() * this.r * 3;
+        p.radius = Math.random() * 5 / 1.5;
+      };
+      Space.prototype.disappear = function (p) {
+        if (p.radius < 0.8 / 1.5) this.resetParticle(p);
+        p.radius *= 0.994;
+      };
+      Space.prototype.draw = function (p) {
+        this.ctx.beginPath();
+        this.ctx.fillStyle = p.color;
+        this.ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+        this.ctx.fill();
+      };
+      Space.prototype.loop = function () {
+        this.ctx.clearRect(-this.canvas.width , -this.canvas.height, this.canvas.width * 2, this.canvas.height * 2);
+        if (this.counter < this.particles.length) this.counter++;
+        for (var i = 0; i < this.counter; i++) {
+          this.disappear(this.particles[i]);
+          this.moveParticle(this.particles[i]);
+          this.draw(this.particles[i]);
+        }
+        requestAnimationFrame(this.loop.bind(this));
+      };
+      return Space;
+    })();
+
+    const space = new Space(spaceCanvas);
+    space.init();
+
+    function scrollToSection() {
+      const firstSection = document.querySelector('.section-block');
+      const rect = firstSection.getBoundingClientRect();
+      const offset = -40;
+      const targetY = window.pageYOffset + rect.top + offset;
+      window.scrollTo({ top: targetY, behavior: 'smooth' });
+    }
+  </script>
 </body>
 </html>
