@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Timeline Fixed</title>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Exo+2:wght@300;600&display=swap" rel="stylesheet">
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background: transparent;
+      font-family: 'Exo 2', sans-serif;
+      overflow: hidden;
+      color: white;
+      user-select: none;
+    }
+
+    .timeline-wrapper {
+      position: relative;
+      width: 100%;
+      height: 100vh;
+      padding: 0 80px;
+      box-sizing: border-box;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    /* Ось времени */
+    .axis {
+      position: absolute;
+      top: 50%;
+      left: 80px;
+      right: 80px;
+      height: 2px;
+      background: linear-gradient(90deg, 
+        rgba(255,255,255,0) 0%, 
+        #00d2ff 10%, 
+        #bc13fe 50%, 
+        #ffd700 90%,
+        rgba(255,255,255,0) 100%
+      );
+      box-shadow: 0 0 10px rgba(0, 210, 255, 0.4);
+      z-index: 1;
+    }
+
+    /* Штрихи шкалы (внизу оси) */
+    .ticks {
+      position: absolute;
+      top: 50%;
+      left: 80px;
+      right: 80px;
+      height: 0;
+      pointer-events: none;
+    }
+    .tick {
+      position: absolute;
+      top: 0;
+      width: 1px;
+      height: 8px;
+      background: rgba(255,255,255,0.3);
+      transform: translateY(2px);
+    }
+    .tick span {
+      position: absolute;
+      top: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 10px;
+      color: rgba(255,255,255,0.4);
+      white-space: nowrap;
+    }
+
+    /* Контейнер одного события */
+.event-item {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+  z-index: 2;
+  transition: z-index 0s 0.3s;
+}
+    
+    .event-item:hover {
+      z-index: 100;
+      transition: z-index 0s;
+    }
+
+    /* Точка: центр совпадает с линией */
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #050505;
+  border: 2px solid #00d2ff;
+  box-shadow: 0 0 8px #00d2ff;
+  flex-shrink: 0;
+  transition: all 0.3s ease;
+  position: relative;
+  z-index: 5;
+  /* УДАЛИ: margin-top: -3px; */
+}
+
+
+/* Чуть опускаем только верхние точки */
+.event-item.top .dot {
+  transform: translateY(15px); /* подбери число: 2–4px как тебе надо */
+}
+
+/* Для нижних оставляем как было */
+.event-item.bottom .dot {
+  transform: translateY(-13px);
+}
+
+
+    /* Линия-коннектор */
+    .connector {
+      width: 1px;
+      background: linear-gradient(to bottom, #00d2ff 20%, transparent 100%);
+      opacity: 0.4;
+      transition: all 0.3s ease;
+    }
+
+    /* Контент (Текст) */
+    .content-box {
+      width: 140px;
+      text-align: center;
+      transition: transform 0.3s ease;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .time-label {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 10px;
+      color: #00d2ff;
+      margin-bottom: 2px;
+      text-transform: uppercase;
+    }
+    .title-label {
+      font-size: 12px;
+      font-weight: 700;
+      color: #fff;
+      text-transform: uppercase;
+      margin-bottom: 2px;
+      line-height: 1.1;
+    }
+    .desc-label {
+      font-size: 10px;
+      color: #aaa;
+      line-height: 1.2;
+      opacity: 0.7;
+      max-width: 130px;
+    }
+
+    /* === ВАРИАНТ: Сверху === */
+    .event-item.top {
+      justify-content: flex-end;
+      top: 50%;
+      transform: translate(-50%, -100%); /* низ блока лежит на оси */
+      padding-bottom: 7px;
+    }
+    .event-item.top .connector {
+      background: linear-gradient(to top, #00d2ff 20%, transparent 100%);
+      margin-bottom: -1px;
+    }
+
+
+    /* === ВАРИАНТ: Снизу === */
+    .event-item.bottom {
+      justify-content: flex-start;
+      top: 50%;
+      transform: translate(-50%, 0); /* верх блока лежит на оси */
+      padding-top: 7px;
+    }
+    .event-item.bottom .connector {
+      background: linear-gradient(to bottom, #00d2ff 20%, transparent 100%);
+      margin-top: -1px;
+    }
+
+    /* === HOVER EFFECT === */
+    .event-item:hover .dot {
+      background: #ffd700;
+      border-color: #ffd700;
+      box-shadow: 0 0 20px #ffd700;
+      transform: scale(1.4);
+    }
+.event-item.top:hover .dot {
+  transform: translateY(15px) scale(1.4);
+}
+.event-item.bottom:hover .dot {
+  transform: translateY(-13px) scale(1.4);
+}
+
+    .event-item:hover .connector {
+      background: #ffd700;
+      opacity: 0.8;
+      box-shadow: 0 0 5px rgba(255, 215, 0, 0.3);
+    }
+    .event-item:hover .content-box {
+      transform: scale(1.15);
+    }
+    .event-item:hover .time-label { color: #ffd700; }
+    .event-item:hover .desc-label { opacity: 1; color: #ddd; }
+    
+    /* Таймер‑заглушка */
+    .timer-placeholder {
+      position: absolute;
+      bottom: 25px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-family: 'Orbitron', sans-serif;
+      font-size: 12px;
+      color: #00d2ff;
+      background: rgba(0, 0, 0, 0.7);
+      padding: 8px 18px;
+      border-radius: 20px;
+      border: 1px solid rgba(0, 210, 255, 0.3);
+      text-shadow: 0 0 8px rgba(0, 210, 255, 0.5);
+      z-index: 10;
+      white-space: nowrap;
+    }
+
+    /* Частицы фона */
+    #particles {
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 100%;
+      pointer-events: none;
+      z-index: 0;
+    }
+  </style>
+</head>
+<body>
+
+  <canvas id="particles"></canvas>
+
+  <div class="timeline-wrapper">
+    <div class="axis"></div>
+    
+    <!-- Деления шкалы (статичные) -->
+    <div class="ticks">
+      <div class="tick" style="left: 0%"><span>13.8 млрд</span></div>
+      <div class="tick" style="left: 25%"><span>10 млрд</span></div>
+      <div class="tick" style="left: 50%"><span>5 млрд</span></div>
+      <div class="tick" style="left: 75%"><span>1 млрд</span></div>
+      <div class="tick" style="left: 100%"><span>Сейчас</span></div>
+    </div>
+
+    <div id="events-layer"></div>
+
+    <!-- Таймер‑заглушка -->
+    <div class="timer-placeholder">
+      С момента Большого Взрыва прошло ~13.8 млрд лет
+    </div>
+  </div>
+
+  <script>
+    const eventsData = [
+      { t: 0.00, level: 2, time: "T = 0",        title: "Большой Взрыв",      desc: "Рождение пространства и времени" },
+      { t: 0.08, level: 3, time: "380 тыс. лет", title: "Рекомбинация",       desc: "Вселенная становится прозрачной" },
+      { t: 0.18, level: 1, time: "400 млн лет",  title: "Первые Звезды",      desc: "Конец темных веков" },
+      { t: 0.35, level: 2, time: "10 млрд лет",  title: "Млечный Путь",       desc: "Формирование нашей галактики" },
+      { t: 0.55, level: 3, time: "4.6 млрд лет", title: "Солнечная система",  desc: "Рождение Солнца и планет" },
+      { t: 0.68, level: 1, time: "3.8 млрд лет", title: "Жизнь на Земле",     desc: "Первые микроорганизмы" },
+      { t: 0.82, level: 2, time: "230 млн лет",  title: "Динозавры",          desc: "Эра гигантских рептилий" },
+      { t: 0.92, level: 3, time: "65 млн лет",   title: "Млекопитающие",      desc: "Расцвет новой жизни" },
+      { t: 1.00, level: 1, time: "Сейчас",       title: "Человечество",       desc: "Технологическая цивилизация" }
+    ];
+
+    const layer = document.getElementById('events-layer');
+    
+    const baseHeight = 30; 
+    const levelStep = 45; 
+
+    eventsData.forEach((ev, index) => {
+      const el = document.createElement('div');
+      
+      const isTop = index % 2 === 0;
+      el.className = `event-item ${isTop ? 'top' : 'bottom'}`;
+      
+      // Позиция по X: t от 0 до 1 → от левого до правого края оси
+      el.style.left = `calc(80px + ${ev.t} * (100% - 160px))`;
+
+      const connectorHeight = baseHeight + (ev.level - 1) * levelStep;
+
+      if (isTop) {
+        el.innerHTML = `
+          <div class="content-box">
+            <div class="time-label">${ev.time}</div>
+            <div class="title-label">${ev.title}</div>
+            <div class="desc-label">${ev.desc}</div>
+          </div>
+          <div class="connector" style="height: ${connectorHeight}px"></div>
+          <div class="dot"></div>
+        `;
+      } else {
+        el.innerHTML = `
+          <div class="dot"></div>
+          <div class="connector" style="height: ${connectorHeight}px"></div>
+          <div class="content-box">
+            <div class="time-label">${ev.time}</div>
+            <div class="title-label">${ev.title}</div>
+            <div class="desc-label">${ev.desc}</div>
+          </div>
+        `;
+      }
+
+      layer.appendChild(el);
+    });
+
+    // Фон (пыль)
+    const cvs = document.getElementById('particles');
+    const ctx = cvs.getContext('2d');
+    
+    function resize() {
+      cvs.width = window.innerWidth;
+      cvs.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    const particles = [];
+    for(let i=0; i<50; i++) {
+      particles.push({
+        x: Math.random() * cvs.width,
+        y: Math.random() * cvs.height,
+        size: Math.random() * 1.5,
+        alpha: Math.random() * 0.5 + 0.1
+      });
+    }
+
+    function draw() {
+      ctx.clearRect(0,0,cvs.width,cvs.height);
+      ctx.fillStyle = "white";
+      
+      particles.forEach(p => {
+        p.x -= 0.2;
+        if(p.x < 0) p.x = cvs.width;
+        
+        ctx.globalAlpha = p.alpha;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size, 0, Math.PI*2);
+        ctx.fill();
+      });
+      requestAnimationFrame(draw);
+    }
+    draw();
+  </script>
+</body>
+</html>

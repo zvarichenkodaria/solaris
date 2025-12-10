@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Структура Вселенной</title>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Exo+2:wght@300;600&display=swap" rel="stylesheet">
+  <style>
+    html, body {
+      margin: 0; padding: 0; width: 100%; height: 100%;
+      overflow: hidden; background: transparent !important;
+    }
+    body { font-family: 'Exo 2', sans-serif; cursor: grab; }
+    body.dragging { cursor: grabbing; }
+    
+    #canvas-container { position: relative; width: 100%; height: 100%; background: transparent; }
+    #canvas-3d { display: block; width: 100%; height: 100%; outline: none; }
+
+    /* Метки */
+    .annotation {
+      position: absolute; top: 0; left: 0; pointer-events: none;
+      transform: translate(-50%, -100%); text-align: center;
+      transition: opacity 0.3s ease; z-index: 10;
+      background: rgba(0, 0, 0, 0.6); padding: 4px 8px;
+      border-radius: 6px; border: 1px solid rgba(0, 210, 255, 0.2);
+      backdrop-filter: blur(2px); white-space: nowrap;
+    }
+    .annotation-title {
+      font-family: 'Orbitron', sans-serif; font-size: 11px;
+      font-weight: 700; color: #00d2ff; text-shadow: 0 0 8px rgba(0, 210, 255, 0.5);
+    }
+    .annotation-desc { font-size: 9px; color: #ccc; margin-top: 1px; }
+
+    /* Описание снизу */
+    .legend-wrapper {
+      position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%);
+      z-index: 100; width: 90%; max-width: 650px; pointer-events: none;
+    }
+
+    .info-box {
+      background: rgba(5, 5, 10, 0.85);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 20px; padding: 15px 25px;
+      text-align: center; backdrop-filter: blur(8px);
+      color: #ccc; font-size: 13px; line-height: 1.5;
+      pointer-events: auto; box-shadow: 0 5px 20px rgba(0,0,0,0.5);
+    }
+    
+    /* Стилизация терминов */
+    .term-web { color: #fff; font-weight: bold; }
+    .term-supercluster { color: #00d2ff; font-weight: bold; }
+    .term-filament { color: #bc13fe; font-weight: bold; }
+    .term-laniakea { color: #ffd700; font-weight: bold; }
+    .term-void { color: #888; font-style: italic; border-bottom: 1px dashed #666; }
+    .term-wall { color: #ff4444; font-weight: bold; }
+
+  </style>
+</head>
+<body>
+
+  <div id="canvas-container">
+    <canvas id="canvas-3d"></canvas>
+  </div>
+
+  <div class="legend-wrapper">
+    <div class="info-box">
+      <span class="term-web">Космическая паутина</span>: гигантские <span class="term-supercluster">сверхскопления</span> галактик (включая нашу <span class="term-laniakea">Ланиакею</span>) и плоские <span class="term-wall">Великие стены</span> соединены нитями тёмной материи — <span class="term-filament">филаментами</span>. Между ними лежат огромные пустоты — <span class="term-void">войды</span>.
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script>
+    const container = document.getElementById('canvas-container');
+    const scene = new THREE.Scene();
+    
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+    scene.add(ambientLight);
+    const dirLight = new THREE.DirectionalLight(0x00d2ff, 1.0);
+    dirLight.position.set(30, 50, 50);
+    scene.add(dirLight);
+    // Доп свет для подсветки Войдов
+    const backLight = new THREE.DirectionalLight(0xffffff, 0.3);
+    backLight.position.set(-30, -20, -50);
+    scene.add(backLight);
+
+    const camera = new THREE.PerspectiveCamera(50, container.clientWidth / container.clientHeight, 0.1, 1000);
+    camera.position.set(0, 0, 170); 
+
+    const renderer = new THREE.WebGLRenderer({ 
+      canvas: document.getElementById('canvas-3d'), 
+      antialias: true, alpha: true 
+    });
+    renderer.setSize(container.clientWidth, container.clientHeight);
+    renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.setClearColor(0x000000, 0);
+
+    const structureGroup = new THREE.Group();
+    structureGroup.position.y = 12;
+    scene.add(structureGroup);
+
+    const nodesData = [];
+    const spread = 75;
+    const nodeCount = 65;
+
+    // --- Ключевые объекты ---
+    const specialNodes = [
+      { id: 0, title: "Ланиакея", desc: "Млечный Путь здесь", type: "supercluster", color: 0xffd700, scale: 2.8 },
+      { id: 12, title: "Великий Аттрактор", desc: "Грав. аномалия", type: "supercluster", color: 0xff8844, scale: 2.2 },
+      { id: 25, title: "Стена Слоуна", desc: "Великая стена", type: "wall", color: 0xff4444, scale: 2.0 }, 
+      { id: 35, title: "Стена CfA2", desc: "Первая открытая стена", type: "wall", color: 0xff4444, scale: 1.8 },
+      { id: 45, title: "Войд Волопаса", desc: "Великая пустота", type: "void", scale: 12.0 }, // Увеличил масштаб войда
+      { id: 55, title: "Войд Эридана", desc: "Холодное пятно", type: "void", scale: 10.0 }
+    ];
+
+    // --- Генерация ---
+    for (let i = 0; i < nodeCount; i++) {
+      const special = specialNodes.find(n => n.id === i);
+      let type = special ? special.type : "filament_node";
+
+      // Координаты
+      const u = Math.random();
+      const v = Math.random();
+      const theta = 2 * Math.PI * u;
+      const phi = Math.acos(2 * v - 1);
+      const r = spread * Math.cbrt(Math.random());
+      
+      let x = r * Math.sin(phi) * Math.cos(theta);
+      let y = r * Math.sin(phi) * Math.sin(theta);
+      let z = r * Math.cos(phi);
+
+      // Если это "Стена" (Wall), сплющиваем координаты, чтобы она была плоской
+      if (type === "wall") {
+        x *= 1.5; y *= 0.2; z *= 1.5; 
+      }
+      
+      // Если это Войд, нужно освободить место вокруг него
+      // Мы просто создаем его в координате, но другие узлы не отталкиваем (упрощение),
+      // но визуально он будет большой пустой сферой.
+      if (type === "void") {
+          // Войды раскидаем подальше друг от друга
+          x = (Math.random() > 0.5 ? 1 : -1) * (30 + Math.random()*20);
+          y = (Math.random() > 0.5 ? 1 : -1) * (20 + Math.random()*20);
+      }
+
+      const nodeInfo = { 
+        x, y, z, 
+        baseX: x, baseY: y, baseZ: z,
+        phase: Math.random() * Math.PI * 2,
+        speedFactor: 0.5 + Math.random() * 0.5,
+        ampFactor: 1.0 + Math.random() * 0.5,
+        
+        title: special?.title, 
+        desc: special?.desc,
+        type: type,
+        mesh: null
+      };
+      nodesData.push(nodeInfo);
+
+      // ВИЗУАЛИЗАЦИЯ
+      let geometry, material, mesh;
+
+      if (type === "void") {
+        // ВИЗУАЛИЗАЦИЯ ВОЙДА: Большая полупрозрачная сфера (пузырь)
+        // Используем Wireframe или очень прозрачный материал, чтобы показать объем пустоты
+        const radius = special ? special.scale : 8.0;
+        geometry = new THREE.SphereGeometry(radius, 32, 32);
+        material = new THREE.MeshBasicMaterial({ 
+            color: 0x111111, // Темный цвет
+            transparent: true, 
+            opacity: 0.15,   // Еле заметный
+            wireframe: true, // Сетка, чтобы видеть структуру пустоты
+            wireframeLinewidth: 0.5
+        });
+        mesh = new THREE.Mesh(geometry, material);
+        
+        // Вторая внутренняя сфера для "тьмы"
+        const innerGeo = new THREE.SphereGeometry(radius * 0.9, 32, 32);
+        const innerMat = new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.1 });
+        mesh.add(new THREE.Mesh(innerGeo, innerMat));
+
+      } else {
+        // Визуализация СКОПЛЕНИЙ и СТЕН
+        const radius = special ? special.scale * 1.0 : Math.random() * 0.6 + 0.3;
+        let color = special ? special.color : 0x00d2ff;
+        
+        // Стены делаем чуть сплюснутыми визуально (эллипсоидами) если нужно, но оставим сферами для единства
+        geometry = new THREE.SphereGeometry(radius, 16, 16);
+        material = new THREE.MeshPhongMaterial({ 
+          color: color, 
+          emissive: color,
+          emissiveIntensity: type === 'wall' ? 0.3 : 0.6,
+          shininess: 50
+        });
+        mesh = new THREE.Mesh(geometry, material);
+        
+        // Halo
+        const glowGeo = new THREE.SphereGeometry(radius * 2.5, 16, 16);
+        const glowMat = new THREE.MeshBasicMaterial({ color: color, transparent: true, opacity: 0.15 });
+        mesh.add(new THREE.Mesh(glowGeo, glowMat));
+      }
+
+      mesh.position.set(x, y, z);
+      nodeInfo.mesh = mesh;
+      structureGroup.add(mesh);
+    }
+
+    // Линии (Филаменты)
+    const filaments = [];
+    const lineMaterial = new THREE.LineBasicMaterial({ color: 0xbc13fe, transparent: true, opacity: 0.25 });
+
+    nodesData.forEach((node, i) => {
+      // К войдам линии не ведем
+      if (node.type === "void") return;
+      
+      const neighbors = nodesData
+        .filter((n, idx) => idx !== i && n.type !== "void") // Исключаем войды из связей
+        .map(n => ({ n, distSq: (n.x-node.x)**2 + (n.y-node.y)**2 + (n.z-node.z)**2 }))
+        .sort((a, b) => a.distSq - b.distSq)
+        .slice(0, 3); 
+
+      neighbors.forEach(target => {
+        if(target.distSq < 2200) { 
+          const geometry = new THREE.BufferGeometry();
+          const positions = new Float32Array(6); 
+          geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+          
+          const line = new THREE.Line(geometry, lineMaterial);
+          structureGroup.add(line);
+          
+          filaments.push({ line, nodeA: node, nodeB: target.n });
+        }
+      });
+    });
+
+    // Метки
+    const labels = [];
+    nodesData.forEach(node => {
+      if (node.title) {
+        const div = document.createElement('div');
+        div.className = 'annotation';
+        div.innerHTML = `<div class="annotation-title">${node.title}</div><div class="annotation-desc">${node.desc}</div>`;
+        container.appendChild(div);
+        labels.push({ div, node });
+      }
+    });
+
+    // --- УПРАВЛЕНИЕ ---
+    let isDragging = false;
+    let previousMousePosition = { x: 0, y: 0 };
+
+    const onPointerDown = (event) => {
+      isDragging = true;
+      document.body.classList.add('dragging');
+      previousMousePosition = { x: event.clientX, y: event.clientY };
+    };
+    const onPointerUp = () => {
+      isDragging = false;
+      document.body.classList.remove('dragging');
+    };
+    const onPointerMove = (event) => {
+      if (!isDragging) return;
+      const deltaMove = {
+        x: event.clientX - previousMousePosition.x,
+        y: event.clientY - previousMousePosition.y
+      };
+      structureGroup.rotation.y += deltaMove.x * 0.005;
+      structureGroup.rotation.x += deltaMove.y * 0.005;
+      previousMousePosition = { x: event.clientX, y: event.clientY };
+    };
+
+    container.addEventListener('mousedown', onPointerDown);
+    container.addEventListener('mouseup', onPointerUp);
+    container.addEventListener('mousemove', onPointerMove);
+    container.addEventListener('mouseleave', onPointerUp);
+    container.addEventListener('touchstart', (e) => onPointerDown(e.touches[0]));
+    container.addEventListener('touchend', onPointerUp);
+    container.addEventListener('touchmove', (e) => onPointerMove(e.touches[0]));
+
+    // --- АНИМАЦИЯ ---
+    const clock = new THREE.Clock();
+
+    function animate() {
+      requestAnimationFrame(animate);
+      const time = clock.getElapsedTime();
+      const speedScale = 0.53; 
+
+      nodesData.forEach(node => {
+        if(!node.mesh) return;
+
+        // Войды двигаются еще медленнее, они массивные и стабильные
+        const currentSpeed = node.type === 'void' ? speedScale * 0.3 : speedScale;
+
+        const shiftX = Math.sin(time * currentSpeed * node.speedFactor + node.phase) * 1.5 * node.ampFactor;
+        const shiftY = Math.cos(time * 0.4 * node.speedFactor + node.phase) * 1.5 * node.ampFactor;
+        const shiftZ = Math.sin(time * 0.45 * node.speedFactor + node.phase * 2) * 1.5 * node.ampFactor;
+
+        node.x = node.baseX + shiftX;
+        node.y = node.baseY + shiftY;
+        node.z = node.baseZ + shiftZ;
+
+        node.mesh.position.set(node.x, node.y, node.z);
+        
+        // Медленное вращение самой сферы войда, чтобы сетка играла
+        if (node.type === 'void') {
+            node.mesh.rotation.y += 0.001;
+            node.mesh.rotation.x += 0.0005;
+        }
+      });
+
+      filaments.forEach(f => {
+        const p = f.line.geometry.attributes.position.array;
+        p[0] = f.nodeA.x; p[1] = f.nodeA.y; p[2] = f.nodeA.z;
+        p[3] = f.nodeB.x; p[4] = f.nodeB.y; p[5] = f.nodeB.z;
+        f.line.geometry.attributes.position.needsUpdate = true;
+      });
+
+      updateLabels();
+      renderer.render(scene, camera);
+    }
+    animate();
+
+    function updateLabels() {
+      const tempV = new THREE.Vector3();
+      labels.forEach(label => {
+        const { div, node } = label;
+        tempV.set(node.x, node.y, node.z);
+        tempV.applyMatrix4(structureGroup.matrixWorld);
+        tempV.project(camera);
+
+        const x = (tempV.x * 0.5 + 0.5) * container.clientWidth;
+        const y = (tempV.y * -0.5 + 0.5) * container.clientHeight;
+
+        div.style.transform = `translate(-50%, -100%) translate(${x}px, ${y}px)`;
+        
+        const isOffScreen = x < -50 || x > container.clientWidth + 50 || y < -50 || y > container.clientHeight + 50;
+        div.style.opacity = (tempV.z > 1 || isOffScreen) ? 0 : 1;
+      });
+    }
+
+    window.addEventListener('resize', () => {
+      camera.aspect = container.clientWidth / container.clientHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(container.clientWidth, container.clientHeight);
+    });
+  </script>
+</body>
+</html>

@@ -3,16 +3,21 @@
 <head>
   <meta charset="UTF-8">
   <title>3D Solar System</title>
+
+  <!-- ТВОИ ПОДКЛЮЧЕНИЯ, ПЕРЕПИСАНЫ ПОД Orbitron + Exo 2 -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css?family=Open+Sans:400,300" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Exo+2:wght@300;600&display=swap" rel="stylesheet">
+
   <style>
-@import url(https://fonts.googleapis.com/css?family=Open+Sans:400,300);
+/* УБРАНО: @import Open Sans */
+/* @import url(https://fonts.googleapis.com/css?family=Open+Sans:400,300); */
+
 /*
   Copyright (c) 2012 Julian Garnier
   Licensed under the MIT license
 */
-html, body, div, span, applet, object, iframe, h1, h2, h3, h4, h5, h6, p, blockquote, pre, a, abbr, acronym, address, big, cite, code, del, dfn, em, img, ins, kbd, q, s, samp, small, strike, strong, sub, sup, tt, var, b, u, i, center, dl, dt, dd, ol, ul, li, fieldset, form, label, legend, table, caption, tbody, tfoot, thead, tr, th, td, article, aside, canvas, details, embed, figure, figcaption, footer, header, hgroup, menu, nav, output, ruby, section, summary, time, mark, audio, video {
+html, body, div, span, applet, object, iframe, h1, h2, h3, h4, h5, h6, p, blockquote, pre, a, abbr, acronym, address, big, cite, code, del, dfn, em, img, ins, kbd, q, s, samp, small, strike, strong, sub, sup, tt, var, b, u, i, center, dl, dt, dd, ol, ul, li, fieldset, form, label, legend, table, caption, tbody, tfoot, thead, tr, th, td, article, aside, canvas, details, embed, figure, figcaption, footer, header, hgroup, menu, nav, section, summary, time, mark, audio, video {
   border: 0;
   font-size: 100%;
   font: inherit;
@@ -44,11 +49,11 @@ table {
   box-sizing: border-box;
   box-sizing: border-box; }
 
+/* ТУТ МЕНЯЕМ ШРИФТ: БЫЛ Open Sans */
 body {
   font-size: 10px;
-  font-family: 'Open Sans', sans-serif;
-  font-weight: 300;
-  background-color: #08090A; }
+  font-family: 'Exo 2', sans-serif;
+  font-weight: 300; }
 
 #universe {
   z-index: 1;
@@ -1103,6 +1108,7 @@ dl.infos dt {
   bottom: 30px;
   color: #FFF;
   font-size: 14px;
+  font-family: 'Orbitron', sans-serif;
   text-shadow: 1px 1px 2px black; }
 
 dl.infos dd:after {
@@ -1112,14 +1118,17 @@ dl.infos dd:after {
   width: 300px;
   color: #FFF;
   font-size: 22px;
-  text-shadow: 1px 1px 2px black; }
+  text-shadow: 1px 1px 2px black;
+font-family: 'Exo 2', sans-serif;
+}
 
 dl.infos dd span:after {
   position: absolute;
   left: 50px;
   bottom: 14px;
   width: 300px;
-  color: #FFF;
+  color: #66e0ff;
+  font-family: 'Exo 2', sans-serif;
   font-size: 11px;
   text-shadow: 1px 1px 2px black; }
 
@@ -1193,8 +1202,14 @@ h1 span, #navbar h1 a {
   position: relative;
   text-decoration: none; }
 
-#navbar a:hover, #data a:hover, #controls label:hover {
-  color: #FFF; }
+#navbar a:hover,
+#data a:hover,
+#controls label:hover,
+dl.infos:hover dt,
+dl.infos:hover dd:after,
+dl.infos:hover dd span:after {
+  color: #ffd700;
+}
 
 #data a.active {
   color: #0CF; }
@@ -1234,11 +1249,15 @@ h1 span, #navbar h1 a {
 #data a {
   margin-bottom: 1px;
   padding: 6px 10px;
-  font-size: 18px; }
+  font-family: 'Exo 2', sans-serif;
+  font-size: 14px !important;   /* принудительно меняем размер */
+  letter-spacing: 0.04em; }
 
 #controls label {
   opacity: .6;
   height: 24px;
+  font-family: 'Exo 2', sans-serif;
+  font-size: 11px !important;
   margin-bottom: 28px; }
 
 #controls label:hover {
@@ -1257,8 +1276,9 @@ h1 span, #navbar h1 a {
 #controls label span {
   display: block;
   margin-left: 36px;
-  padding-top: 4px;
-  font-size: 18px;
+  padding-top: 8px;
+  font-family: 'Exo 2', sans-serif;
+  font-size: 11px !important;
   color: #FFF; }
 
 #controls input {
@@ -1503,13 +1523,13 @@ h1 {
 <body class="opening hide-UI view-2D zoom-large data-close controls-close">
 
   <div id="navbar">
-    <a id="toggle-data" href="#data"><i class="icon-data"></i>Data</a>
+    <a id="toggle-data" href="#data"><i class="icon-data"></i>Объект</a>
     <h1>Солнечная система в 3D<br>
       <span>by
         <a href="https://codepen.io/juliangarnier/pen/krNqZO" target="_blank">@JulianGarnier</a>
       </span>
     </h1>
-    <a id="toggle-controls" href="#controls"><i class="icon-controls"></i>Controls</a>
+    <a id="toggle-controls" href="#controls"><i class="icon-controls"></i>Настройки</a>
   </div>
 
   <div id="data">

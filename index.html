@@ -26,7 +26,6 @@
       overflow-x: hidden;
     }
 
-    /* полноэкранный фон под сцену */
     #canvas-container {
       position: fixed;
       top: 0;
@@ -37,7 +36,6 @@
       pointer-events: none;
     }
 
-    /* прозрачный слой с кольцом частиц */
     #space-layer {
       position: absolute;
       inset: 0;
@@ -108,7 +106,9 @@
         var(--color-blue) 50%,
         var(--color-purple) 100%
       );
-      -webkit-background-clip: text;
+       background-clip: text;
+       color: transparent;
+      -webkit-text-fill-color: transparent;
       -webkit-text-fill-color: transparent;
       filter: drop-shadow(0 0 20px rgba(0, 210, 255, 0.3));
     }
@@ -210,20 +210,18 @@
 
     .header-line { display: none; }
 
-    /* Блоки с контентом */
     .solar-map-wrapper {
       display: flex;
       align-items: center;
       justify-content: center;
       gap: 40px;
-      background: rgba(10, 10, 12, 0.9);
+      background: rgba(10, 10, 12, 0.7);
       border-radius: 30px;
       padding: 35px 40px;
       border: 1px solid rgba(255, 255, 255, 0.08);
       box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
     }
 
-    /* Простая стилизация для текстовых блоков (Структура, Шкала) */
     .info-block-content {
       background: rgba(255, 255, 255, 0.03);
       border: 1px solid rgba(255, 255, 255, 0.1);
@@ -240,12 +238,11 @@
       margin-bottom: 0;
     }
 
-    /* Библиотека кнопок */
     .library-row {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
       column-gap: 20px;
-      row-gap: 20px; /* добавил отступ между рядами */
+      row-gap: 20px;
       width: 100%;
     }
 
@@ -265,7 +262,7 @@
       text-align: left;
       width: 100%;
       box-sizing: border-box;
-      min-height: 120px; /* чтобы кнопки были одной высоты */
+      min-height: 120px;
     }
 
     .lib-pill-title {
@@ -297,7 +294,6 @@
       font-size: 0.8rem;
     }
 
-    /* 3D Экран */
     #explorer-screen {
       position: fixed;
       top: 0;
@@ -361,7 +357,8 @@
       font-size: 4rem;
       margin: 0;
       background: linear-gradient(90deg, #fff, #aaa);
-      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
       -webkit-text-fill-color: transparent;
       text-align: left;
     }
@@ -467,7 +464,8 @@
         <div class="header-line"></div>
       </div>
       <section class="content-section solar-map-wrapper">
-        <iframe src="solar-orbit.html" style="width: 100%; height: 600px; border: none"></iframe>
+        <iframe src="solar-orbit.html" style="width: 100%; height: 600px;
+        border: none; background: transparent;"></iframe>
       </section>
     </div>
 
@@ -477,9 +475,9 @@
         <h2 class="hud-title">Структура Вселенной</h2>
         <div class="header-line"></div>
       </div>
-      <section class="content-section info-block-content">
-        <p>Вселенная имеет сложную ячеистую структуру, напоминающую космическую паутину. Галактики не разбросаны хаотично, а собраны в скопления и сверхскопления, которые выстраиваются в гигантские нити (филаменты), разделенные огромными пустотами — войдами.</p>
-        <p>Эти структуры простираются на миллиарды световых лет и формировались под действием гравитации тёмной материи с момента Большого взрыва.</p>
+      <section class="content-section solar-map-wrapper">
+        <iframe src="universe-structure.html" allowtransparency="true"
+        style="background: transparent; width: 100%; height: 600px; border: none"></iframe>
       </section>
     </div>
 
@@ -489,11 +487,8 @@
         <h2 class="hud-title">Временная шкала</h2>
         <div class="header-line"></div>
       </div>
-      <section class="content-section info-block-content">
-        <p><strong>13.8 млрд лет назад:</strong> Большой взрыв. Рождение пространства и времени.</p>
-        <p><strong>380 000 лет спустя:</strong> Вселенная становится прозрачной, появляется реликтовое излучение.</p>
-        <p><strong>400 млн лет спустя:</strong> Загораются первые звёзды и формируются первые галактики.</p>
-        <p><strong>9 млрд лет спустя:</strong> Формируется Солнечная система и Земля.</p>
+      <section class="content-section solar-map-wrapper">
+        <iframe src="timeline.html" style="width: 100%; height: 600px; border: none"></iframe>
       </section>
     </div>
 
@@ -506,7 +501,6 @@
 
       <section class="content-section">
         <div class="library-row">
-          <!-- Старые кнопки -->
           <button class="lib-pill">
             <span class="lib-pill-title">Планеты</span>
             <span class="lib-pill-sub">8 основных планет системы</span>
@@ -520,7 +514,6 @@
             <span class="lib-pill-sub">Загадки гравитации</span>
           </button>
 
-          <!-- Новые кнопки -->
           <button class="lib-pill">
             <span class="lib-pill-title">Космическая техника</span>
             <span class="lib-pill-sub">Ракеты, корабли, спутники</span>
@@ -542,33 +535,27 @@
     </div>
   </div>
 
-  <!-- 3D Exploration Screen -->
-<!-- ЭКРАН СИМУЛЯЦИИ 3D -->
-<div id="explorer-screen" class="screen hidden">
-  <!-- Кнопка выхода -->
-  <button class="exit-btn" onclick="exitJourney()">&times;</button>
+  <div id="explorer-screen" class="screen hidden">
+    <button class="exit-btn" onclick="exitJourney()">&times;</button>
 
-  <!-- Левая инфо‑панель -->
-  <div class="info-panel" id="info-panel">
-    <div class="planet-type" id="p-type">Звезда G2V</div>
-    <h1 class="planet-title" id="p-name">СОЛНЦЕ</h1>
-    <p class="planet-desc" id="p-desc">
-      Звезда главной последовательности класса G. Масса Солнца составляет
-      99,86 % от суммарной массы всей Солнечной системы.
-    </p>
+    <div class="info-panel" id="info-panel">
+      <div class="planet-type" id="p-type">Звезда G2V</div>
+      <h1 class="planet-title" id="p-name">СОЛНЦЕ</h1>
+      <p class="planet-desc" id="p-desc">
+        Звезда главной последовательности класса G. Масса Солнца составляет
+        99,86 % от суммарной массы всей Солнечной системы.
+      </p>
+    </div>
+
+    <div class="nav-dock">
+      <button class="planet-btn" data-index="0"></button>
+      <button class="planet-btn" data-index="1"></button>
+      <button class="planet-btn" data-index="2"></button>
+      <button class="planet-btn" data-index="3"></button>
+      <button class="planet-btn" data-index="4"></button>
+      <button class="planet-btn" data-index="5"></button>
+    </div>
   </div>
-
-  <!-- Нижняя док‑панель для планет -->
-  <div class="nav-dock">
-    <button class="planet-btn" data-index="0"></button>
-    <button class="planet-btn" data-index="1"></button>
-    <button class="planet-btn" data-index="2"></button>
-    <button class="planet-btn" data-index="3"></button>
-    <button class="planet-btn" data-index="4"></button>
-    <button class="planet-btn" data-index="5"></button>
-  </div>
-</div>
-
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
@@ -714,27 +701,23 @@
       });
     }
 
-// навигация по планетам в нижнем доке
-const dock = document.querySelector('.nav-dock');
-const dockButtons = dock.querySelectorAll('.planet-btn');
+    const dock = document.querySelector('.nav-dock');
+    const dockButtons = dock.querySelectorAll('.planet-btn');
 
-dockButtons.forEach((btn, index) => {
-  btn.addEventListener('click', () => {
-    currentPlanetIndex = index;
-    loadPlanetData(currentPlanetIndex);
+    dockButtons.forEach((btn, index) => {
+      btn.addEventListener('click', () => {
+        currentPlanetIndex = index;
+        loadPlanetData(currentPlanetIndex);
 
-    dockButtons.forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-  });
-});
+        dockButtons.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+      });
+    });
 
-// активируем первую планету по умолчанию
-if (dockButtons.length) {
-  dockButtons[0].classList.add('active');
-  loadPlanetData(0);
-}
-
-
+    if (dockButtons.length) {
+      dockButtons[0].classList.add('active');
+      loadPlanetData(0);
+    }
 
     const observerOptions = { threshold: 0.1 };
     const observer = new IntersectionObserver(entries => {
