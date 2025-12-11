@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <title>SOLARIS | 3D Simulation</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@300;600&display=swap');
+
+body {
+  margin: 0;
+  background: transparent; /* было #050505 */
+  font-family: 'Exo 2', sans-serif;
+  overflow: hidden;
+}
+
+    #canvas-container {
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 100%;
+    }
+
+    .exit-btn {
+      position: absolute;
+      top: 30px; left: 30px;
+      z-index: 100;
+      width: 50px; height: 50px;
+      border-radius: 50%;
+      background: rgba(0, 0, 0, 0.5);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: white; font-size: 1.5rem;
+      cursor: pointer; transition: 0.3s;
+      backdrop-filter: blur(5px);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .exit-btn:hover {
+      background: #ffd700; color: black;
+      border-color: #ffd700; transform: rotate(90deg);
+    }
+
+    .info-panel {
+      position: absolute; top: 0; left: 0; height: 100%; width: 350px;
+      padding: 60px;
+      background: rgba(0, 0, 0, 0.4);
+      backdrop-filter: blur(8px);
+      border-right: 1px solid rgba(255, 255, 255, 0.05);
+      display: flex; flex-direction: column; justify-content: center;
+      pointer-events: none;
+    }
+    .info-panel > * { pointer-events: auto; }
+
+    .planet-title {
+      font-family: 'Orbitron', sans-serif; font-size: 4rem; margin: 0;
+      background: linear-gradient(90deg, #fff, #aaa);
+      background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .planet-type {
+      color: #00d2ff; text-transform: uppercase; margin-bottom: 15px;
+      letter-spacing: 2px; font-weight: bold;
+    }
+    .planet-desc { color: #ccc; line-height: 1.7; }
+
+    .nav-dock {
+      position: absolute; bottom: 50px; left: 50%;
+      transform: translateX(-50%);
+      display: flex; gap: 20px;
+      background: rgba(0, 0, 0, 0.5);
+      padding: 15px 25px; border-radius: 50px;
+      backdrop-filter: blur(5px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .planet-btn {
+      width: 14px; height: 14px; border-radius: 50%;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      background: transparent; cursor: pointer; transition: 0.3s;
+    }
+    .planet-btn:hover {
+      background: #ffd700; border-color: #ffd700; box-shadow: 0 0 10px #ffd700;
+    }
+    .planet-btn.active {
+      background: #ffd700; border-color: #ffd700;
+      transform: scale(1.4); box-shadow: 0 0 20px #ffd700;
+    }
+
+    #warp-overlay {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: white; z-index: 999; pointer-events: none;
+      opacity: 1; transition: opacity 1.5s;
+    }
+  </style>
+</head>
+<body>
+  <div id="canvas-container"></div>
+  <div id="warp-overlay"></div>
+
+  <button class="exit-btn" onclick="exitFromSim()">&times;</button>
+
+  <div class="info-panel" id="info-panel">
+    <div class="planet-type" id="p-type">Звезда G2V</div>
+    <h1 class="planet-title" id="p-name">СОЛНЦЕ</h1>
+    <p class="planet-desc" id="p-desc">
+      Звезда главной последовательности класса G. Масса Солнца составляет
+      99,86 % от суммарной массы всей Солнечной системы.
+    </p>
+  </div>
+
+  <div class="nav-dock">
+    <button class="planet-btn" data-index="0"></button>
+    <button class="planet-btn" data-index="1"></button>
+    <button class="planet-btn" data-index="2"></button>
+    <button class="planet-btn" data-index="3"></button>
+    <button class="planet-btn" data-index="4"></button>
+    <button class="planet-btn" data-index="5"></button>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+
+  <script>
+    const planets = [
+      { key: 'sun',     name: 'СОЛНЦЕ',   type: 'Звезда G2V',      texture: 'textures/sun.jpg',
+        desc: 'Звезда главной последовательности класса G. Масса Солнца составляет 99,86 % от суммарной массы всей Солнечной системы.' },
+      { key: 'mercury', name: 'МЕРКУРИЙ', type: 'Каменная планета', texture: 'textures/mercury.jpg',
+        desc: 'Самая маленькая планета системы. Температура на поверхности колеблется от −173 °C до +427 °C.' },
+      { key: 'venus',   name: 'ВЕНЕРА',  type: 'Токсичный мир',     texture: 'textures/venus.jpg',
+        desc: 'Вторая планета от Солнца. Имеет плотную атмосферу из углекислого газа, создающую невероятный парниковый эффект.' },
+      { key: 'earth',   name: 'ЗЕМЛЯ',   type: 'Наш дом',           texture: 'textures/earth.jpg',
+        desc: 'Колыбель человечества. Единственное известное тело во Вселенной, населенное живыми организмами.' },
+      { key: 'mars',    name: 'МАРС',    type: 'Красная планета',   texture: 'textures/mars.jpg',
+        desc: 'Планета с разряженной атмосферой. Особенности рельефа — ударные кратеры, вулканы, долины и пустыни.' },
+      { key: 'jupiter', name: 'ЮПИТЕР',  type: 'Газовый гигант',    texture: 'textures/jupiter.jpg',
+        desc: 'Крупнейшая планета Солнечной системы. Ряд атмосферных явлений на Юпитере — штормы, молнии, полярные сияния.' }
+    ];
+
+    let currentPlanetIndex = 0;
+
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(
+      75,
+      window.innerWidth / window.innerHeight,
+      0.1,
+      1000
+    );
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setClearColor(0x000000, 0); // добавь эту строку
+document.getElementById('canvas-container').appendChild(renderer.domElement);
+
+    const planetGroup = new THREE.Group();
+    scene.add(planetGroup);
+    planetGroup.position.set(-0.5, 0, 0);
+
+    const geometry = new THREE.SphereGeometry(4, 64, 64);
+    const material = new THREE.MeshStandardMaterial({
+      color: 0xffffff,
+      roughness: 0.8,
+      metalness: 0.1,
+      transparent: true,
+      opacity: 1
+    });
+    const planetMesh = new THREE.Mesh(geometry, material);
+    planetGroup.add(planetMesh);
+
+    const sunLight = new THREE.DirectionalLight(0xffffff, 1.2);
+    sunLight.position.set(10, 10, 20);
+    scene.add(sunLight);
+    const rimLight = new THREE.SpotLight(0x00d2ff, 2);
+    rimLight.position.set(-10, 10, -5);
+    rimLight.lookAt(0, 0, 0);
+    scene.add(rimLight);
+    const ambientLight = new THREE.AmbientLight(0x404040, 0.3);
+    scene.add(ambientLight);
+
+    const starsGeometry = new THREE.BufferGeometry();
+    const starsCount = 5000;
+    const posArray = new Float32Array(starsCount * 3);
+    for (let i = 0; i < starsCount * 3; i++) {
+      posArray[i] = (Math.random() - 0.5) * 600;
+    }
+    starsGeometry.setAttribute(
+      'position',
+      new THREE.BufferAttribute(posArray, 3)
+    );
+    const starsMaterial = new THREE.PointsMaterial({
+      size: 0.15,
+      color: 0xffffff,
+      transparent: true,
+      opacity: 0.8
+    });
+    const starsMesh = new THREE.Points(starsGeometry, starsMaterial);
+    scene.add(starsMesh);
+
+    camera.position.set(0, 0, 20);
+
+    function animate() {
+      requestAnimationFrame(animate);
+      planetMesh.rotation.y += 0.0015;
+      starsMesh.position.z += 0.3;
+      if (starsMesh.position.z > 200) starsMesh.position.z = -200;
+      planetGroup.rotation.z =
+        Math.sin(Date.now() * 0.0005) * 0.05;
+      renderer.render(scene, camera);
+    }
+    animate();
+
+    const textureLoader = new THREE.TextureLoader();
+    function loadPlanetData(index) {
+      const data = planets[index];
+
+      gsap.fromTo(
+        '#info-panel',
+        { opacity: 0.5 },
+        { opacity: 1, duration: 0.5 }
+      );
+
+      document.getElementById('p-name').innerText = data.name;
+      document.getElementById('p-type').innerText = data.type;
+      document.getElementById('p-desc').innerText = data.desc;
+
+      textureLoader.load(
+        data.texture,
+        tex => {
+          planetMesh.material.map = tex;
+          planetMesh.material.needsUpdate = true;
+        },
+        undefined,
+        () => {
+          planetMesh.material.color.setHex(0x555555);
+          planetMesh.material.map = null;
+          planetMesh.material.needsUpdate = true;
+        }
+      );
+    }
+
+    const dockButtons = document.querySelectorAll('.planet-btn');
+    dockButtons.forEach((btn, index) => {
+      btn.addEventListener('click', () => {
+        currentPlanetIndex = index;
+        loadPlanetData(currentPlanetIndex);
+        dockButtons.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+      });
+    });
+
+    if (dockButtons.length) {
+      dockButtons[0].classList.add('active');
+      loadPlanetData(0);
+    }
+
+    window.addEventListener('load', () => {
+      setTimeout(() => {
+        document.getElementById('warp-overlay').style.opacity = '0';
+      }, 100);
+    });
+
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+function exitFromSim() {
+  // если запущено ВНУТРИ index.html через iframe
+  if (window.parent && typeof window.parent.endJourney === 'function') {
+    window.parent.endJourney();
+  } else {
+    // если вдруг открыли simulation.html напрямую — просто идем на index.html
+    window.location.href = 'index.html';
+  }
+}
+
+  </script>
+</body>
+</html>
