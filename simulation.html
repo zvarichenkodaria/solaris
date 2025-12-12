@@ -129,58 +129,50 @@
   `;
 
   // innerCoreFragmentShader из твоего кода, но с настраиваемым цветом
-
-
   const starFragmentShader = `
-  uniform float time;
-  uniform vec3 uColorMain;
-  uniform vec3 uColorSecondary;
+    uniform float time;
+    uniform vec3 uColorMain;
+    uniform vec3 uColorSecondary;
 
-  varying vec3 vNormal;
-  varying vec3 vWorldPosition;
-  varying vec2 vUv;
+    varying vec3 vNormal;
+    varying vec3 vWorldPosition;
+    varying vec2 vUv;
 
-  ${glsl_noise}
+    ${glsl_noise}
 
-  float rand(vec2 co) {
-    return fract(sin(dot(co.xy, vec2(12.9898, 78.233))) * 43758.5453);
-  }
+    float rand(vec2 co) {
+      return fract(sin(dot(co.xy, vec2(12.9898, 78.233))) * 43758.5453);
+    }
 
-  void main() {
-    // Берём fbm БЕЗ времени — одна и та же картинка каждый кадр
-    vec3 noisyCoords = vWorldPosition * 1.8;
-    float surfaceNoise = fbm(noisyCoords);
-    surfaceNoise = smoothstep(0.0, 0.95, surfaceNoise);
+    void main() {
+      vec3 baseCoreColor = uColorMain;
 
-    // Статические «флееры» — тоже без time
-    vec2 flareUv1 = vUv * 2.2 + vec2(0.2, 0.1);
-    float flare1 = smoothstep(0.72, 0.77, rand(fract(flareUv1) * 5.0));
+      float pulse = sin(time * 2.5) * 0.15 + 0.85;
+      pulse += sin(time * 3.7 + 1.0) * 0.1;
+      pulse = clamp(pulse, 0.6, 1.0);
 
-    vec2 flareUv2 = vUv * 2.0 + vec2(0.3, -0.15);
-    float flare2 = smoothstep(0.8, 0.84, rand(fract(flareUv2) * 6.0));
+      vec3 noisyCoords = vWorldPosition * 2.5 + vec3(0.0, 0.0, time * 0.3);
+      float surfaceNoise = fbm(noisyCoords);
+      surfaceNoise = smoothstep(-0.2, 0.8, surfaceNoise);
 
-    float totalFlare = clamp(flare1 + flare2, 0.0, 0.7);
+      vec2 flareUv1 = vUv * 3.0 + vec2(time * 0.2, sin(time * 0.15) * 0.5);
+      float flare1 = smoothstep(0.7, 0.75, rand(fract(flareUv1) * 5.0));
+      flare1 *= (0.5 + sin(time * 5.0 + vUv.x * 10.0) * 0.5);
 
-    // ЛЁГКАЯ пульсация яркости (это единственное, что зависит от time)
-    float pulse = sin(time * 0.4) * 0.03 + 0.97;
-    pulse = clamp(pulse, 0.9, 1.05);
+      vec2 flareUv2 = vUv * 2.5 + vec2(cos(time * 0.1) * 0.4, time * -0.15);
+      float flare2 = smoothstep(0.8, 0.83, rand(fract(flareUv2) * 6.0));
+      flare2 *= (0.5 + cos(time * 6.5 + vUv.y * 12.0) * 0.5);
 
-    vec3 baseCoreColor = uColorMain;
-    vec3 finalColor = baseCoreColor;
+      float totalFlare = clamp(flare1 + flare2, 0.0, 1.0);
 
-    // прожилки структуры
-    finalColor = mix(finalColor, uColorSecondary, surfaceNoise * 0.5);
-    // мягкие пересветы
-    finalColor += vec3(0.7, 0.9, 1.0) * totalFlare * 0.8;
+      vec3 finalColor = baseCoreColor;
+      finalColor = mix(finalColor, uColorSecondary, surfaceNoise * 0.6);
+      finalColor += vec3(0.8, 1.0, 0.9) * totalFlare * 1.5;
+      finalColor *= pulse;
 
-    finalColor *= pulse;
-
-    gl_FragColor = vec4(finalColor, 1.0);
-  }
-`;
-
-
-
+      gl_FragColor = vec4(finalColor, 1.0);
+    }
+  `;
 
   // === ТЕКСТУРЫ ПЛАНЕТ ===
   const texURLs = {
@@ -544,7 +536,12 @@
     if (!isDragging && objectGroup.children.length > 0) objectGroup.rotation.y += 0.001;
     if (moonGroup) moonGroup.rotation.y += 0.005;
 
-
+    // обновляем time только у шейдерных звёзд
+    objectGroup.traverse(obj => {
+      if (obj.isMesh && obj.userData && obj.userData.uniforms) {
+        obj.userData.uniforms.time.value = t;
+      }
+    });
 
     renderer.render(scene, camera);
   }
@@ -569,6 +566,10 @@
 
   init();
 </script>
+
+
+
+
 
 
 </body>
