@@ -1,20 +1,15 @@
 (function() {
     const styles = `
     <style>
-        /* --- 1. КНОПКА МЕНЮ (Ваш дизайн, но слева и серая) --- */
         #solar-menu-trigger {
             position: fixed;
             top: 25px;
-            left: 30px; /* ПЕРЕМЕСТИЛ НАЛЕВО */
+            left: 30px;
             z-index: 10000;
-            
             padding: 10px 25px;
             background: rgba(0, 0, 0, 0.4);
-            
-            /* ИЗНАЧАЛЬНО СЕРАЯ (как просили) */
             border: 1px solid rgba(255, 255, 255, 0.3);
             color: rgba(255, 255, 255, 0.6);
-            
             border-radius: 50px;
             font-family: 'Orbitron', sans-serif;
             font-size: 0.9rem;
@@ -26,7 +21,6 @@
             outline: none;
         }
 
-        /* При наведении - ВОЗВРАЩАЕМ ГОЛУБОЙ НЕОН (Ваш любимый стиль) */
         #solar-menu-trigger:hover {
             border-color: var(--color-blue, #00d2ff);
             color: var(--color-blue, #00d2ff);
@@ -34,7 +28,6 @@
             transform: scale(1.05);
         }
 
-        /* Активное состояние - Желтый */
         #solar-menu-trigger.active {
             background: var(--color-sun, #ffd700);
             color: #000;
@@ -42,7 +35,6 @@
             box-shadow: 0 0 30px rgba(255, 215, 0, 0.6);
         }
 
-        /* --- 2. ПАНЕЛЬ (Ваш дизайн) --- */
         #solar-top-bar {
             position: fixed; top: 0; left: 0; width: 100%; height: 100px;
             background: rgba(5, 5, 8, 0.95);
@@ -59,7 +51,6 @@
             display: flex; gap: 40px; list-style: none; padding: 0; margin: 0; align-items: center;
         }
 
-        /* КНОПКА 3D (Желтая, стиль "sim-highlight" из вашего кода) */
         .sim-btn {
             background: transparent; border: none;
             color: var(--color-sun, #ffd700);
@@ -74,10 +65,8 @@
             color: #fff;
         }
 
-        /* --- ВЫПАДАЮЩИЕ СПИСКИ (DROPDOWNS) --- */
         .dropdown-wrapper { position: relative; height: 100%; display: flex; align-items: center; }
 
-        /* Кнопки "Главная" и "Справочник" (Стиль кнопок из вашего кода) */
         .nav-text-btn {
             background: transparent; border: none; color: #fff;
             font-family: 'Exo 2', sans-serif; font-size: 1rem;
@@ -91,23 +80,20 @@
         .nav-text-btn:hover { color: var(--color-blue, #00d2ff); text-shadow: 0 0 10px rgba(0, 210, 255, 0.5); }
         .nav-text-btn:hover::after { width: 100%; }
 
-        /* Сам выпадающий блок (дизайн панели) */
         .dropdown-box {
             position: absolute; top: 60px; left: 50%; transform: translateX(-50%);
             width: 260px;
             background: rgba(10, 10, 15, 0.95);
             border: 1px solid rgba(255, 255, 255, 0.1);
-            border-top: 2px solid var(--color-blue, #00d2ff); /* Голубая полоска сверху */
+            border-top: 2px solid var(--color-blue, #00d2ff);
             border-radius: 0 0 8px 8px;
             padding: 10px 0;
             opacity: 0; visibility: hidden; transition: 0.2s;
             box-shadow: 0 15px 30px rgba(0,0,0,0.8);
             display: flex; flex-direction: column;
         }
-        
         .dropdown-wrapper:hover .dropdown-box { opacity: 1; visibility: visible; top: 50px; }
 
-        /* Кнопки внутри выпадающего списка */
         .drop-item {
             background: none; border: none; text-align: left;
             padding: 12px 20px; color: #aaa;
@@ -117,7 +103,7 @@
         }
         .drop-item:hover {
             color: #fff; background: rgba(255, 255, 255, 0.05);
-            border-left-color: var(--color-sun, #ffd700); /* Желтый акцент при наведении */
+            border-left-color: var(--color-sun, #ffd700);
             padding-left: 25px;
         }
 
@@ -125,49 +111,50 @@
     </style>
     `;
 
-    const html = `
-    <!-- Кнопка вызова (Слева, Серая) -->
-    <button id="solar-menu-trigger" onclick="toggleSolarMenu()">Меню системы</button>
+const html = `
+<button id="solar-menu-trigger" onclick="toggleSolarMenu()">Меню системы</button>
 
-    <div id="solar-top-bar">
-        <ul class="solar-nav-list">
-            
-            <!-- 1. 3D СИМУЛЯЦИЯ (Первая, Желтая) -->
-            <li>
-                <button class="sim-btn" onclick="navToSim()">3D Симуляция</button>
-            </li>
+<div id="solar-top-bar">
+    <ul class="solar-nav-list">
+        <li>
+            <button class="sim-btn" onclick="navToSim()">3D Симуляция</button>
+        </li>
 
-            <li class="divider"></li>
+        <li class="divider"></li>
 
-            <!-- 2. ГЛАВНАЯ (Выпадающий список) -->
-            <li class="dropdown-wrapper">
-                <button class="nav-text-btn">Главная ▼</button>
-                <div class="dropdown-box">
-                    <button class="drop-item" onclick="navToSection(0)">Орбитальная карта</button>
-                    <button class="drop-item" onclick="navToSection(1)">Структура Вселенной</button>
-                    <button class="drop-item" onclick="navToSection(2)">Временная шкала</button>
-                    <button class="drop-item" onclick="navToSection(3)">Справочник (Блок)</button>
-                </div>
-            </li>
+        <!-- ГЛАВНАЯ -->
+        <li class="dropdown-wrapper">
+            <button class="nav-text-btn" onclick="navMainClick(event)">
+                Главная ▼
+            </button>
+            <div class="dropdown-box">
+                <button class="drop-item" onclick="navToRootSection(0)">Орбитальная карта</button>
+                <button class="drop-item" onclick="navToRootSection(1)">Структура Вселенной</button>
+                <button class="drop-item" onclick="navToRootSection(2)">Временная шкала</button>
+                <button class="drop-item" onclick="navToRootSection(3)">Справочник (Блок)</button>
+            </div>
+        </li>
 
-            <li class="divider"></li>
+        <li class="divider"></li>
 
-            <!-- 3. СПРАВОЧНИК (Выпадающий список) -->
-            <li class="dropdown-wrapper">
-                <button class="nav-text-btn">Справочник ▼</button>
-                <div class="dropdown-box">
-                    <a href="planets.html" class="drop-item">Планеты</a>
-                    <a href="stars.html" class="drop-item">Звезды</a>
-                    <a href="blackholes.html" class="drop-item">Черные дыры</a>
-                    <a href="tech.html" class="drop-item">Космическая техника</a>
-                    <a href="asteroids.html" class="drop-item">Малые тела</a>
-                    <a href="sky.html" class="drop-item">Ночное небо</a>
-                </div>
-            </li>
+        <!-- СПРАВОЧНИК -->
+        <li class="dropdown-wrapper">
+            <button class="nav-text-btn" onclick="navAtlasClick(event)">
+                Справочник ▼
+            </button>
+            <div class="dropdown-box">
+                <a href="/planets/" class="drop-item">Планеты</a>
+                <a href="/stars/" class="drop-item">Звезды</a>
+                <a href="/blackholes/" class="drop-item">Черные дыры</a>
+                <a href="/tech/" class="drop-item">Космическая техника</a>
+                <a href="/small-bodies/" class="drop-item">Малые тела</a>
+                <a href="/night-sky/" class="drop-item">Ночное небо</a>
+            </div>
+        </li>
+    </ul>
+</div>
+`;
 
-        </ul>
-    </div>
-    `;
 
     document.addEventListener('DOMContentLoaded', () => {
         document.head.insertAdjacentHTML('beforeend', styles);
@@ -175,6 +162,17 @@
 
         const bar = document.getElementById('solar-top-bar');
         const btn = document.getElementById('solar-menu-trigger');
+
+        // Всегда открываем меню по умолчанию на страницах справочника
+        const isIndex =
+          window.location.pathname === '/' ||
+          window.location.pathname.endsWith('/index.html') && window.location.pathname.split('/').length <= 2;
+
+        if (!isIndex) {
+          bar.classList.add('visible');
+          btn.classList.add('active');
+          btn.innerText = "ЗАКРЫТЬ";
+        }
 
         window.toggleSolarMenu = () => {
             const isOpen = bar.classList.contains('visible');
@@ -189,38 +187,83 @@
             }
         };
 
-window.navToSim = () => {
-  // Закрываем меню
-  toggleSolarMenu && toggleSolarMenu();
+        window.navToSim = () => {
+          toggleSolarMenu && toggleSolarMenu();
 
-  // Если глобальная функция есть — вызываем её
-  if (typeof window.startJourney === 'function') {
-    window.startJourney();
+          if (isIndex) {
+            if (typeof window.startJourney === 'function') {
+              window.startJourney();
+            } else {
+              window.location.href = '/?start=true';
+            }
+          } else {
+            window.location.href = '/?start=true';
+          }
+        };
+
+        window.navToRootSection = (index) => {
+            if (isIndex) {
+                const sections = document.querySelectorAll('.section-block');
+                if (sections.length > 0 && sections[index]) {
+                    const rect = sections[index].getBoundingClientRect();
+                    const offset = -120;
+                    const targetY = window.pageYOffset + rect.top + offset;
+                    window.scrollTo({ top: targetY, behavior: 'smooth' });
+                }
+            } else {
+                window.location.href = '/';
+            }
+        };
+
+window.navMainClick = (event) => {
+  // не ломаем hover-дропдаун
+  event.stopPropagation();
+  event.preventDefault();
+
+  const isIndex =
+    window.location.pathname === '/' ||
+    (window.location.pathname.endsWith('/index.html') &&
+     window.location.pathname.split('/').length <= 2);
+
+  if (isIndex) {
+    // уже на главной — скроллим к самому верху
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   } else {
-    // На всякий случай, если мы НЕ на index.html или скрипт ещё не определен,
-    // переходим на главную, где ты сам нажмёшь кнопку
-    window.location.href = 'index.html';
+    // с любой страницы справочника ведем на главную
+    window.location.href = '/';
+  }
+};
+
+window.navAtlasClick = (event) => {
+  event.stopPropagation();
+  event.preventDefault();
+
+  const isIndex =
+    window.location.pathname === '/' ||
+    (window.location.pathname.endsWith('/index.html') &&
+     window.location.pathname.split('/').length <= 2);
+
+  if (isIndex) {
+    // на главной — скролл до блока "Справочник объектов" (четвёртый section-block)
+    const sections = document.querySelectorAll('.section-block');
+    if (sections.length > 3) {
+      const rect = sections[3].getBoundingClientRect();
+      const offset = -120;
+      const targetY = window.pageYOffset + rect.top + offset;
+      window.scrollTo({ top: targetY, behavior: 'smooth' });
+    } else {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  } else {
+    // на страницах справочника ведем сразу на Planets как первую запись
+    window.location.href = '/planets/';
   }
 };
 
 
-        window.navToSection = (index) => {
-            // Не закрываем меню, как просили
-            const sections = document.querySelectorAll('.section-block');
-            if (sections.length > 0 && sections[index]) {
-                const rect = sections[index].getBoundingClientRect();
-                const offset = -120;
-                const targetY = window.pageYOffset + rect.top + offset;
-                window.scrollTo({ top: targetY, behavior: 'smooth' });
-            } else {
-                window.location.href = 'index.html';
-            }
-        };
 
-        document.addEventListener('click', (e) => {
-             if (!bar.contains(e.target) && !btn.contains(e.target) && bar.classList.contains('visible')) {
-                 window.toggleSolarMenu();
-             }
-        });
+
+        // ВАЖНО: убрали обработчик клика вне меню,
+        // чтобы меню не закрывалось само от нажатий по странице.
     });
 })();

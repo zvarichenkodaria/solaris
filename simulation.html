@@ -19,9 +19,30 @@
     }
     #canvas-container:active { cursor: grabbing; }
 
-    /* === UI === */
+    #blackhole-wrapper {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      display: none;
+      z-index: 2;
+      pointer-events: none;
+    }
+    #blackhole-shift {
+      flex: 0 0 430px;
+      height: 100%;
+      pointer-events: none;
+    }
+    #blackhole-frame {
+      flex: 1 1 auto;
+      height: 100%;
+      border: none;
+      background: transparent;
+      display: block;
+      pointer-events: auto;
+    }
+
     .exit-btn {
-      position: absolute; top: 30px; left: 30px; z-index: 100;
+      position: absolute; top: 80px; left: 30px; z-index: 100;
       width: 50px; height: 50px; border-radius: 50%;
       background: rgba(0, 0, 0, 0.5); border: 1px solid rgba(255, 255, 255, 0.2);
       color: white; font-size: 1.5rem; cursor: pointer; transition: 0.3s;
@@ -37,8 +58,9 @@
     }
     .cat-btn {
       background: transparent; border: none; color: rgba(255,255,255,0.6);
-      font-family: 'Orbitron', sans-serif; font-size: 0.9rem; cursor: pointer;
-      padding: 8px 16px; border-radius: 20px; transition: 0.3s; text-transform: uppercase;
+      font-family: 'Orbitron', sans-serif; font-size: 0.85rem; cursor: pointer;
+      padding: 8px 14px; border-radius: 20px; transition: 0.3s; text-transform: uppercase;
+      white-space: nowrap;
     }
     .cat-btn:hover { color: #fff; }
     .cat-btn.active {
@@ -46,10 +68,9 @@
       box-shadow: 0 0 10px rgba(255, 215, 0, 0.1);
     }
 
-    /* === ИНФО-ПАНЕЛЬ === */
     .info-panel {
-      position: absolute; top: 0; left: 0; height: 100%; width: 350px;
-      padding: 60px;
+      position: absolute; top: 0; left: 0; height: 100%; width: 340px;
+      padding: 40px 40px 40px 50px;
       background: linear-gradient(90deg, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.6) 80%, transparent 100%);
       border-right: 1px solid rgba(255, 255, 255, 0.15);
       display: flex; flex-direction: column; justify-content: center;
@@ -62,25 +83,77 @@
     .info-content.fade-out { opacity: 0; }
 
     .planet-title {
-      font-family: 'Orbitron', sans-serif; font-size: 4rem; margin: 0;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 3.2rem;
+      margin: 0;
       background: linear-gradient(90deg, #fff, #aaa);
       background-clip: text; -webkit-text-fill-color: transparent;
+      letter-spacing: 1px;
+      white-space: nowrap;
     }
-    .planet-type { color: #00d2ff; text-transform: uppercase; margin-bottom: 15px; letter-spacing: 2px; font-weight: bold; }
-    .planet-desc { color: #ccc; line-height: 1.7; font-size: 0.95rem; max-width: 300px; }
+
+    .planet-title.betelgeuse-small,
+    .planet-title.gargantua-small {
+      font-size: 2.4rem;
+    }
+
+    .planet-title.betelgeuse-small,
+    .planet-title.gargantua-small,
+    .planet-title.wormhole-small {
+      font-size: 2.3rem;
+    }
+
+    .planet-type {
+      color: #00d2ff;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+      letter-spacing: 2px;
+      font-weight: bold;
+      font-size: 0.8rem;
+    }
+.planet-desc {
+  color: #ccc;
+  line-height: 1.6;
+  font-size: 0.9rem;
+  max-width: 280px;
+  margin-top: 10px;
+  margin-bottom: 12px;
+  white-space: normal;
+  word-wrap: break-word;      /* или overflow-wrap: break-word; */
+}
+    .planet-stats {
+      margin-top: 6px;
+      font-size: 0.8rem;
+      color: #aaa;
+      line-height: 1.5;
+    }
+.planet-stats div {
+  margin-bottom: 2px;
+  white-space: normal;        /* чтобы не было одной строкой */
+  word-wrap: break-word;      /* переносить очень длинные куски */
+}
 
     .nav-dock {
       position: absolute; bottom: 50px; left: 50%; transform: translateX(-50%);
-      display: flex; gap: 20px; background: rgba(0, 0, 0, 0.5);
-      padding: 15px 25px; border-radius: 50px; backdrop-filter: blur(5px);
+      display: flex; gap: 16px; background: rgba(0, 0, 0, 0.5);
+      padding: 12px 20px; border-radius: 50px; backdrop-filter: blur(5px);
       border: 1px solid rgba(255, 255, 255, 0.1); z-index: 90;
       align-items: center;
+      max-width: 90vw;
+      overflow-x: auto;
     }
     .planet-btn {
-      width: 14px; height: 14px; min-width: 14px; min-height: 14px;
-      border-radius: 50% !important; aspect-ratio: 1/1; 
-      border: 2px solid rgba(255, 255, 255, 0.3); background: transparent;
-      cursor: pointer; transition: 0.3s; flex-shrink: 0; padding: 0;
+      width: 18px;
+      height: 18px;
+      min-width: 18px;
+      min-height: 18px;
+      border-radius: 50%;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      background: transparent;
+      cursor: pointer;
+      transition: 0.3s;
+      flex-shrink: 0;
+      padding: 0;
     }
     .planet-btn:hover { background: #ffd700; border-color: #ffd700; box-shadow: 0 0 10px #ffd700; }
     .planet-btn.active { background: #ffd700; border-color: #ffd700; transform: scale(1.4); box-shadow: 0 0 20px #ffd700; }
@@ -88,6 +161,12 @@
 </head>
 <body>
   <div id="canvas-container"></div>
+
+  <div id="blackhole-wrapper" style="display:none; display:flex;">
+    <div id="blackhole-shift"></div>
+    <iframe id="blackhole-frame" src="blackhole.html"></iframe>
+  </div>
+
   <button class="exit-btn" onclick="exitFromSim()">&times;</button>
 
   <div class="category-nav">
@@ -101,476 +180,826 @@
       <div class="planet-type" id="p-type">...</div>
       <h1 class="planet-title" id="p-name">SOLARIS</h1>
       <p class="planet-desc" id="p-desc">Загрузка...</p>
+      <div class="planet-stats" id="p-stats"></div>
     </div>
   </div>
 
   <div class="nav-dock" id="nav-dock"></div>
 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
 
+  <script>
+    const texURLs = {
+      sun:     './img/sun.jpg',
+      mercury: './img/mercury.jpg',
+      venus:   './img/venus.jpg',
+      earth:   './img/earth.jpg',
+      mars:    './img/mars.jpg',
+      jupiter: './img/jupiter.jpg',
+      saturn:  './img/saturn.jpg',
+      uranus:  './img/uranus.jpg',
+      neptune: './img/neptune.jpg',
+      moon: 'https://raw.githubusercontent.com/mrdoob/three.js/master/examples/textures/planets/moon_1024.jpg'
+    };
 
+    const database = {
+      solar: [
+        {
+          key: 'sun',
+          name: 'СОЛНЦЕ',
+          type: 'Звезда G2V',
+          texture: texURLs.sun,
+          isSun: true,
+          scale: 0.9,
+          desc: 'Звезда главной последовательности, источник энергии всей системы.',
+          info: {
+            класс: 'G2V',
+            масса: '1.99 × 10³⁰ кг',
+            радиус: '695 700 км',
+            возраст: '≈ 4.6 млрд лет',
+            спутники: {
+              количество: '8 планет, >200 известных лун',
+              список: ['Меркурий', 'Венера', 'Земля', 'Марс', 'Юпитер', 'Сатурн', 'Уран', 'Нептун']
+            },
+            расстояние: '≈ 1 а.е. до Земли',
+            факты: [
+              'Содержит более 99% массы всей Солнечной системы.',
+              'Энергия вырабатывается термоядерным синтезом водорода в гелий.'
+            ]
+          }
+        },
+        {
+          key: 'mercury',
+          name: 'МЕРКУРИЙ',
+          type: 'Каменная планета',
+          texture: texURLs.mercury,
+          scale: 0.5,
+          desc: 'Ближайшая к Солнцу раскалённая каменная планета.',
+          info: {
+            класс: 'Планета земного типа',
+            масса: '3.30 × 10²³ кг',
+            радиус: '2 439 км',
+            возраст: '≈ 4.5 млрд лет',
+            спутники: {
+              количество: '0 спутников'
+            },
+            расстояние: '0.39 а.е. от Солнца',
+            факты: [
+              'День по солнечному времени длиннее года.',
+              'Поверхность покрыта ударными кратерами, похожими на Луну.'
+            ]
+          }
+        },
+        {
+          key: 'venus',
+          name: 'ВЕНЕРА',
+          type: 'Токсичный мир',
+          texture: texURLs.venus,
+          scale: 0.8,
+          desc: 'Плотная атмосфера и парниковый эффект делают её крайне жаркой.',
+          info: {
+            класс: 'Планета земного типа',
+            масса: '4.87 × 10²⁴ кг',
+            радиус: '6 052 км',
+            возраст: '≈ 4.5 млрд лет',
+            спутники: {
+              количество: '0 спутников'
+            },
+            расстояние: '0.72 а.е. от Солнца',
+            факты: [
+              'Средняя температура поверхности выше температуры расплава свинца.',
+              'Вращается в обратную сторону относительно большинства планет.'
+            ]
+          }
+        },
+        {
+          key: 'earth',
+          name: 'ЗЕМЛЯ',
+          type: 'Наш дом',
+          texture: texURLs.earth,
+          hasMoon: true,
+          scale: 0.85,
+          desc: 'Планета с жидкой водой и жизнью на поверхности.',
+          info: {
+            класс: 'Планета земного типа',
+            масса: '5.97 × 10²⁴ кг',
+            радиус: '6 371 км',
+            возраст: '≈ 4.54 млрд лет',
+            спутники: {
+              количество: '1 естественный спутник',
+              список: ['Луна']
+            },
+            расстояние: 'Опорная точка наблюдателя',
+            факты: [
+              'Около 71% поверхности покрыто водой.',
+              'Единственное известное место во Вселенной с развитой биосферой.'
+            ]
+          }
+        },
+        {
+          key: 'mars',
+          name: 'МАРС',
+          type: 'Красная планета',
+          texture: texURLs.mars,
+          scale: 0.7,
+          desc: 'Холодный пустынный мир с древними следами воды.',
+          info: {
+            класс: 'Планета земного типа',
+            масса: '6.42 × 10²³ кг',
+            радиус: '3 390 км',
+            возраст: '≈ 4.6 млрд лет',
+            спутники: {
+              количество: '2 небольших спутника',
+              список: ['Фобос', 'Деймос']
+            },
+            расстояние: '1.52 а.е. от Солнца',
+            факты: [
+              'На Марсе находится самая высокая известная гора — Олимп.',
+              'Имеются полярные шапки изо льда и замёрзшего CO₂.'
+            ]
+          }
+        },
+        {
+          key: 'jupiter',
+          name: 'ЮПИТЕР',
+          type: 'Газовый гигант',
+          texture: texURLs.jupiter,
+          scale: 1.05,
+          hasRings: true,
+          ringOpacity: 0.08,
+          desc: 'Массивный газовый гигант с Большим Красным Пятном.',
+          info: {
+            класс: 'Газовый гигант',
+            масса: '1.90 × 10²⁷ кг',
+            радиус: '69 911 км',
+            возраст: '≈ 4.6 млрд лет',
+            спутники: {
+              количество: '> 90 известных спутников',
+              список: ['Ио', 'Европа', 'Ганимед', 'Каллисто']
+            },
+            расстояние: '5.2 а.е. от Солнца',
+            факты: [
+              'Обладает самым сильным магнитным полем среди планет.',
+              'Большое Красное Пятно — ураган, существующий сотни лет.'
+            ]
+          }
+        },
+        {
+          key: 'saturn',
+          name: 'САТУРН',
+          type: 'Властелин колец',
+          texture: texURLs.saturn,
+          scale: 1.0,
+          hasRings: true,
+          ringSize: 2.2,
+          ringOpacity: 0.8,
+          desc: 'Газовый гигант с самой эффектной системой колец.',
+          info: {
+            класс: 'Газовый гигант',
+            масса: '5.68 × 10²⁶ кг',
+            радиус: '58 232 км',
+            возраст: '≈ 4.6 млрд лет',
+            спутники: {
+              количество: '> 80 известных спутников',
+              список: ['Титан', 'Энцелад', 'Япет', 'Рея']
+            },
+            расстояние: '9.5 а.е. от Солнца',
+            факты: [
+              'Кольца состоят в основном из льда и пыли.',
+              'Спутник Энцелад выбрасывает гейзеры воды из подповерхностного океана.'
+            ]
+          }
+        },
+        {
+          key: 'uranus',
+          name: 'УРАН',
+          type: 'Ледяной гигант',
+          texture: texURLs.uranus,
+          scale: 0.95,
+          hasRings: true,
+          verticalRings: true,
+          ringColor: 0x99ffff,
+          ringOpacity: 0.08,
+          desc: 'Ледяной мир, вращающийся почти “на боку”.',
+          info: {
+            класс: 'Ледяной гигант',
+            масса: '8.68 × 10²⁵ кг',
+            радиус: '25 362 км',
+            возраст: '≈ 4.5 млрд лет',
+            спутники: {
+              количество: '> 25 спутников',
+              список: ['Титания', 'Оберон', 'Умбриэль', 'Ариэль', 'Миранда']
+            },
+            расстояние: '19.2 а.е. от Солнца',
+            факты: [
+              'Ось вращения наклонена примерно на 98° — он как бы лежит на боку.',
+              'Имеет систему тёмных узких колец.'
+            ]
+          }
+        },
+        {
+          key: 'neptune',
+          name: 'НЕПТУН',
+          type: 'Ветреный мир',
+          texture: texURLs.neptune,
+          scale: 0.95,
+          hasRings: true,
+          ringColor: 0xaaaaff,
+          ringOpacity: 0.08,
+          desc: 'Дальний ледяной гигант с мощнейшими ветрами.',
+          info: {
+            класс: 'Ледяной гигант',
+            масса: '1.02 × 10²⁶ кг',
+            радиус: '24 622 км',
+            возраст: '≈ 4.5 млрд лет',
+            спутники: {
+              количество: '14 известных спутников',
+              список: ['Тритон', 'Протей', 'Нереида']
+            },
+            расстояние: '30.1 а.е. от Солнца',
+            факты: [
+              'Ветры достигают скоростей свыше 2 000 км/ч.',
+              'Спутник Тритон вращается в направлении, противоположном вращению планеты.'
+            ]
+          }
+        }
+      ],
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+      stars: [
+        {
+          key: 'red_dwarf',
+          name: 'ПРОКСИМА',
+          type: 'Красный карлик',
+          scale: 0.7,
+          isRoundStar: true,
+          color: 0xff5a3a,
+          desc: 'Компактная холодная звезда, ближайший звёздный сосед Солнца.',
+          info: {
+            класс: 'M5.5Ve',
+            масса: '≈ 0.12 масс Солнца',
+            радиус: '≈ 0.14 радиуса Солнца',
+            возраст: '≈ 4.8 млрд лет',
+            спутники: {
+              количество: 'как минимум 2 планеты',
+              список: ['Proxima b', 'Proxima c']
+            },
+            расстояние: '≈ 4.24 световых года',
+            факты: [
+              'Яркость сильно меняется из‑за вспышек.',
+              'Входит в систему α Центавра.'
+            ]
+          }
+        },
+        {
+          key: 'sirius',
+          name: 'СИРИУС',
+          type: 'Ярчайшая звезда',
+          scale: 1.0,
+          isRoundStar: true,
+          color: 0xbbe4ff,
+          desc: 'Бело‑голубая звезда, самая яркая на земном ночном небе.',
+          info: {
+            класс: 'A1V (Sirius A)',
+            масса: '≈ 2.0 масс Солнца',
+            радиус: '≈ 1.7 радиуса Солнца',
+            возраст: '≈ 0.24 млрд лет',
+            спутники: {
+              количество: '1 белый карлик‑спутник',
+              список: ['Сириус B']
+            },
+            расстояние: '≈ 8.6 световых лет',
+            факты: [
+              'Двойная система: яркий A и компактный белый карлик B.',
+              'Был важной навигационной звездой в древних культурах.'
+            ]
+          }
+        },
+        {
+          key: 'betelgeuse',
+          name: 'БЕТЕЛЬГЕЙЗЕ',
+          type: 'Красный сверхгигант',
+          scale: 1.2,
+          isRoundStar: true,
+          color: 0xffaa55,
+          desc: 'Огромный красный сверхгигант на поздней стадии эволюции.',
+          info: {
+            класс: 'M1–M2 Ia-ab',
+            масса: '≈ 10–20 масс Солнца',
+            радиус: '≈ 900 радиусов Солнца (оценочно)',
+            возраст: '≈ 8–10 млн лет',
+            спутники: {
+              количество: 'известных планет и спутников не обнаружено'
+            },
+            расстояние: '≈ 548 световых лет',
+            факты: [
+              'Ожидается, что в будущем взорвётся как сверхновая.',
+              'Размеры столь велики, что орбита Юпитера могла бы уместиться внутри звезды.'
+            ]
+          }
+        },
+        {
+          key: 'polaris',
+          name: 'ПОЛЯРНАЯ',
+          type: 'Сверхгигант',
+          scale: 1.0,
+          isRoundStar: true,
+          color: 0xfff6d5,
+          desc: 'Главный ориентир небесного севера и пульсирующий сверхгигант.',
+          info: {
+            класс: 'F7Ib (Полярная A)',
+            масса: '≈ 5–7 масс Солнца',
+            радиус: '≈ 37 радиусов Солнца',
+            возраст: '≈ 70 млн лет',
+            спутники: {
+              количество: 'как минимум 2 слабых компаньона',
+              список: ['Polaris B', 'Polaris Ab']
+            },
+            расстояние: '≈ 433 световых года',
+            факты: [
+              'Находится близко к северному небесному полюсу.',
+              'Относится к цефеидам — переменным звёздам, важным для измерения расстояний.'
+            ]
+          }
+        }
+      ],
 
-<script>
-  // ==== GLSL шум + innerCore из твоего кода ====
-  const glsl_noise = `vec3 mod289(vec3 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; } vec4 mod289(vec4 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; } vec4 permute(vec4 x) { return mod289(((x*34.0)+1.0)*x); } vec4 taylorInvSqrt(vec4 r) { return 1.79284291400159 - 0.85373472095314 * r; } float snoise(vec3 v) { const vec2 C = vec2(1.0/6.0, 1.0/3.0); const vec4 D = vec4(0.0, 0.5, 1.0, 2.0); vec3 i  = floor(v + dot(v, C.yyy)); vec3 x0 = v - i + dot(i, C.xxx); vec3 g = step(x0.yzx, x0.xyz); vec3 l = 1.0 - g; vec3 i1 = min(g.xyz, l.zxy); vec3 i2 = max(g.xyz, l.zxy); vec3 x1 = x0 - i1 + C.xxx; vec3 x2 = x0 - i2 + C.yyy; vec3 x3 = x0 - D.yyy; i = mod289(i); vec4 p = permute(permute(permute( i.z + vec4(0.0, i1.z, i2.z, 1.0)) + i.y + vec4(0.0, i1.y, i2.y, 1.0)) + i.x + vec4(0.0, i1.x, i2.x, 1.0)); float n_ = 0.142857142857; vec3  ns = n_ * D.wyz - D.xzx; vec4 j = p - 49.0 * floor(p * ns.z * ns.z); vec4 x_ = floor(j * ns.z); vec4 y_ = floor(j - 7.0 * x_); vec4 x = x_ * ns.x + ns.yyyy; vec4 y = y_ * ns.x + ns.yyyy; vec4 h = 1.0 - abs(x) - abs(y); vec4 b0 = vec4(x.xy, y.xy); vec4 b1 = vec4(x.zw, y.zw); vec4 s0 = floor(b0)*2.0 + 1.0; vec4 s1 = floor(b1)*2.0 + 1.0; vec4 sh = -step(h, vec4(0.0)); vec4 a0 = b0.xzyw + s0.xzyw*sh.xxyy; vec4 a1 = b1.xzyw + s1.xzyw*sh.zzww; vec3 p0 = vec3(a0.xy,h.x); vec3 p1 = vec3(a0.zw,h.y); vec3 p2 = vec3(a1.xy,h.z); vec3 p3 = vec3(a1.zw,h.w); vec4 norm = taylorInvSqrt(vec4(dot(p0,p0), dot(p1,p1), dot(p2,p2), dot(p3,p3))); p0 *= norm.x; p1 *= norm.y; p2 *= norm.z; p3 *= norm.w; vec4 m = max(0.6 - vec4(dot(x0,x0), dot(x1,x1), dot(x2,x2), dot(x3,x3)), 0.0); m = m * m; return 42.0 * dot(m*m, vec4(dot(p0,x0), dot(p1,x1), dot(p2,x2), dot(p3,x3))); } float fbm(vec3 p) { float value = 0.0; float amplitude = 0.5; float frequency = 0.0; for (int i = 0; i < 6; i++) { value += amplitude * snoise(p * (frequency + 1.0)); amplitude *= 0.5; frequency += 1.0; } return value; }`;
+      exotic: [
+        {
+          key: 'blackhole',
+          name: 'GARGANTUA',
+          type: 'Черная дыра',
+          scale: 0.9,
+          isBlackholeIframe: true,
+          iframeSrc: 'blackhole.html',
+          desc: 'Визуализация сверхмассивной чёрной дыры с аккреционным диском.',
+          info: {
+            класс: 'Сверхмассивная чёрная дыра (модель)',
+            масса: 'порядка сотен миллионов масс Солнца (по фильму)',
+            спутники: {
+              количество: 'планеты и диски в художественной вселенной',
+              список: ['Миллер', 'Манн', 'Эдмундс']
+            },
+            расстояние: 'условно задано в симуляции',
+            факты: [
+              'Визуальный образ основан на расчётах общей теории относительности.',
+              'Сильное гравитационное линзирование искажают фоновые звезды.'
+            ]
+          }
+        },
+        {
+          key: 'andromeda',
+          name: 'АНДРОМЕДА',
+          type: 'Галактика',
+          scale: 1.2,
+          isGalaxyIframe: true,
+          iframeSrc: 'andromeda.html',
+          desc: 'Крупная спиральная галактика‑соседка Млечного Пути.',
+          info: {
+            класс: 'Спиральная галактика типа SA(s)b',
+            масса: '≈ 1–1.5 × 10¹² масс Солнца',
+            радиус: 'диск порядка 110 000 световых лет',
+            спутники: {
+              количество: '> 20 карликовых галактик‑спутников',
+              список: ['M32', 'M110', 'NGC 147', 'NGC 185']
+            },
+            расстояние: '≈ 2.5 млн световых лет',
+            факты: [
+              'Содержит сотни миллиардов звёзд.',
+              'Через миллиарды лет может столкнуться и слиться с Млечным Путём.'
+            ]
+          }
+        },
+        {
+          key: 'wormhole',
+          name: 'КРОТОВАЯ НОРА',
+          type: 'Туннель',
+          scale: 0.7,
+          isWormholeIframe: true,
+          iframeSrc: 'wormhole.html',
+          desc: 'Гипотетический туннель в пространстве‑времени между удалёнными точками.',
+          info: {
+            класс: 'Решения уравнений общей теории относительности',
+            масса: 'зависит от конкретной модели (в симуляции условна)',
+            спутники: {
+              количество: 'может соединять любые области пространства',
+              список: ['вход', 'выход']
+            },
+            расстояние: 'соединяет точки с огромным реальным расстоянием',
+            факты: [
+              'Для устойчивости классическим моделям нужны экзотические виды материи.',
+              'Пока что не обнаружено ни одного подтверждённого кротового туннеля.'
+            ]
+          }
+        }
+      ]
+    };
 
-  const starVertexShader = `
-    varying vec3 vNormal;
-    varying vec3 vWorldPosition;
-    varying vec2 vUv;
-    void main() {
-      vNormal = normal;
-      vUv = uv;
-      vWorldPosition = (modelMatrix * vec4(position, 1.0)).xyz;
-      gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+    let currentCategory = 'solar';
+    let scene, camera, renderer, objectGroup;
+    let earthMesh = null;
+    let moonMesh = null;
+    let raycaster, mouse;
+    let draggableObjects = [];
+    let draggingObj = null;
+    let isRotatingGroup = false;
+
+    const loader = new THREE.TextureLoader();
+    let clock = null;
+
+    function showIframe(show, src) {
+      const wrapper = document.getElementById('blackhole-wrapper');
+      const frame = document.getElementById('blackhole-frame');
+      if (!wrapper || !frame) return;
+      if (show) {
+        if (src) frame.src = src;
+        wrapper.style.display = 'flex';
+      } else {
+        wrapper.style.display = 'none';
+      }
     }
-  `;
 
-  // innerCoreFragmentShader из твоего кода, но с настраиваемым цветом
-  const starFragmentShader = `
-    uniform float time;
-    uniform vec3 uColorMain;
-    uniform vec3 uColorSecondary;
+    function init() {
+      const container = document.getElementById('canvas-container');
 
-    varying vec3 vNormal;
-    varying vec3 vWorldPosition;
-    varying vec2 vUv;
+      scene = new THREE.Scene();
+      camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+      camera.position.set(0, 0, 16);
 
-    ${glsl_noise}
+      clock = new THREE.Clock();
 
-    float rand(vec2 co) {
-      return fract(sin(dot(co.xy, vec2(12.9898, 78.233))) * 43758.5453);
+      renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setClearColor(0x000000, 0);
+      renderer.setPixelRatio(window.devicePixelRatio);
+      renderer.outputColorSpace = THREE.SRGBColorSpace;
+      container.appendChild(renderer.domElement);
+
+      const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 1.2);
+      scene.add(hemiLight);
+      const sunLight = new THREE.DirectionalLight(0xffffff, 0.8);
+      sunLight.position.set(5, 3, 10);
+      scene.add(sunLight);
+
+      objectGroup = new THREE.Group();
+      objectGroup.position.set(3, 0, 0);
+      scene.add(objectGroup);
+
+      raycaster = new THREE.Raycaster();
+      mouse = new THREE.Vector2();
+
+      container.addEventListener('mousedown', onMouseDown);
+      window.addEventListener('mouseup', onMouseUp);
+      container.addEventListener('mousemove', onMouseMove);
+
+      loadCategory('solar');
+      animate();
     }
 
-    void main() {
-      vec3 baseCoreColor = uColorMain;
+    function onMouseDown(e) {
+      const rect = renderer.domElement.getBoundingClientRect();
+      mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+      mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
 
-      float pulse = sin(time * 2.5) * 0.15 + 0.85;
-      pulse += sin(time * 3.7 + 1.0) * 0.1;
-      pulse = clamp(pulse, 0.6, 1.0);
+      raycaster.setFromCamera(mouse, camera);
+      const intersects = raycaster.intersectObjects(draggableObjects, true);
 
-      vec3 noisyCoords = vWorldPosition * 2.5 + vec3(0.0, 0.0, time * 0.3);
-      float surfaceNoise = fbm(noisyCoords);
-      surfaceNoise = smoothstep(-0.2, 0.8, surfaceNoise);
-
-      vec2 flareUv1 = vUv * 3.0 + vec2(time * 0.2, sin(time * 0.15) * 0.5);
-      float flare1 = smoothstep(0.7, 0.75, rand(fract(flareUv1) * 5.0));
-      flare1 *= (0.5 + sin(time * 5.0 + vUv.x * 10.0) * 0.5);
-
-      vec2 flareUv2 = vUv * 2.5 + vec2(cos(time * 0.1) * 0.4, time * -0.15);
-      float flare2 = smoothstep(0.8, 0.83, rand(fract(flareUv2) * 6.0));
-      flare2 *= (0.5 + cos(time * 6.5 + vUv.y * 12.0) * 0.5);
-
-      float totalFlare = clamp(flare1 + flare2, 0.0, 1.0);
-
-      vec3 finalColor = baseCoreColor;
-      finalColor = mix(finalColor, uColorSecondary, surfaceNoise * 0.6);
-      finalColor += vec3(0.8, 1.0, 0.9) * totalFlare * 1.5;
-      finalColor *= pulse;
-
-      gl_FragColor = vec4(finalColor, 1.0);
+      if (intersects.length > 0) {
+        draggingObj = intersects[0].object;
+        isRotatingGroup = false;
+      } else {
+        draggingObj = null;
+        isRotatingGroup = true;
+      }
     }
-  `;
 
-  // === ТЕКСТУРЫ ПЛАНЕТ ===
-  const texURLs = {
-    sun:     './img/sun.jpg',
-    mercury: './img/mercury.jpg',
-    venus:   './img/venus.jpg',
-    earth:   './img/earth.jpg',
-    mars:    './img/mars.jpg',
-    jupiter: './img/jupiter.jpg',
-    saturn:  './img/saturn.jpg',
-    uranus:  './img/uranus.jpg',
-    neptune: './img/neptune.jpg',
-    moon: 'https://raw.githubusercontent.com/mrdoob/three.js/master/examples/textures/planets/moon_1024.jpg'
-  };
-
-  const database = {
-    solar: [
-      { key: 'sun', name: 'СОЛНЦЕ', type: 'Звезда G2V', texture: texURLs.sun, isSun: true, scale: 0.9,
-        desc: 'Звезда главной последовательности.' },
-      { key: 'mercury', name: 'МЕРКУРИЙ', type: 'Каменная планета', texture: texURLs.mercury, scale: 0.5,
-        desc: 'Ближайшая к Солнцу планета.' },
-      { key: 'venus', name: 'ВЕНЕРА', type: 'Токсичный мир', texture: texURLs.venus, scale: 0.8,
-        desc: 'Плотная атмосфера создает экстремальную жару.' },
-      { key: 'earth', name: 'ЗЕМЛЯ', type: 'Наш дом', texture: texURLs.earth, hasMoon: true, scale: 0.85,
-        desc: 'Единственная известная планета с жизнью.' },
-      { key: 'mars', name: 'МАРС', type: 'Красная планета', texture: texURLs.mars, scale: 0.7,
-        desc: 'Холодный мир пыли и вулканов.' },
-      { key: 'jupiter', name: 'ЮПИТЕР', type: 'Газовый гигант', texture: texURLs.jupiter, scale: 1.4,
-        hasRings: true, ringOpacity: 0.08,
-        desc: 'Крупнейшая планета Солнечной системы.' },
-      { key: 'saturn', name: 'САТУРН', type: 'Властелин колец', texture: texURLs.saturn, scale: 1.1, ringSize: 2.2,
-        hasRings: true, ringOpacity: 0.8,
-        desc: 'Планета с самой заметной системой колец.' },
-      { key: 'uranus', name: 'УРАН', type: 'Ледяной гигант', texture: texURLs.uranus, scale: 1.0,
-        hasRings: true, verticalRings: true, ringColor: 0x99ffff, ringOpacity: 0.08,
-        desc: 'Вращается почти «на боку».' },
-      { key: 'neptune', name: 'НЕПТУН', type: 'Ветреный мир', texture: texURLs.neptune, scale: 1.0,
-        hasRings: true, ringColor: 0xaaaaff, ringOpacity: 0.08,
-        desc: 'Самая дальняя классическая планета.' }
-    ],
-    stars: [
-      // цвет под каждую звезду
-      { key: 'red_dwarf', name: 'ПРОКСИМА ЦЕНТАВРА', type: 'Красный карлик',
-        scale: 0.5, isNeonStar: true,
-        colorMain: new THREE.Color(0xff3300),
-        colorSecondary: new THREE.Color(0xffaa33),
-        desc: 'Ближайшая к Солнцу звезда.' },
-
-      { key: 'sirius', name: 'СИРИУС', type: 'Ярчайшая звезда',
-        scale: 1.0, isNeonStar: true,
-        colorMain: new THREE.Color(0x00c8ff),
-        colorSecondary: new THREE.Color(0x7fe9ff),
-        desc: 'Бело-голубая звезда, ярчайшая на ночном небе.' },
-
-      { key: 'betelgeuse', name: 'БЕТЕЛЬГЕЙЗЕ', type: 'Красный сверхгигант',
-        scale: 1.5, isNeonStar: true,
-        colorMain: new THREE.Color(0xff3300),
-        colorSecondary: new THREE.Color(0xffdd66),
-        desc: 'Красный сверхгигант.' },
-
-      { key: 'polaris', name: 'ПОЛЯРНАЯ ЗВЕЗДА', type: 'Сверхгигант',
-        scale: 1.1, isNeonStar: true,
-        colorMain: new THREE.Color(0xfff0b3),
-        colorSecondary: new THREE.Color(0xffffff),
-        desc: 'Желтоватый сверхгигант.' }
-    ],
-    exotic: [
-      { key: 'blackhole', name: 'GARGANTUA', type: 'Черная дыра', scale: 0.8, isBlackHole: true,
-        desc: 'Массивная черная дыра.' },
-      { key: 'eagle_nebula', name: 'ТУМАННОСТЬ ОРЛА', type: 'Туманность', scale: 1.3, isNebula: true, color: 0xffaaee,
-        desc: 'Туманность с областями звездообразования.' },
-      { key: 'andromeda', name: 'ГАЛАКТИКА АНДРОМЕДЫ', type: 'Спиральная галактика', scale: 1.2, isGalaxy: true, color: 0xaaccff,
-        desc: 'Ближайшая крупная галактика.' },
-      { key: 'quasar', name: 'КВАЗАР', type: 'Активное ядро', scale: 0.9, isQuasar: true, color: 0xffffff,
-        desc: 'Чрезвычайно яркий далекий объект.' },
-      { key: 'magnetar', name: 'МАГНИТАР', type: 'Нейтронная звезда', scale: 0.4, isMagnetar: true, color: 0xaa00ff,
-        desc: 'Обладает экстремальным магнитным полем.' },
-      { key: 'wormhole', name: 'КРОТОВАЯ НОРА', type: 'Туннель', scale: 1.0, isWormhole: true,
-        desc: 'Гипотетический мост в пространстве-времени.' }
-    ]
-  };
-
-  let currentCategory = 'solar';
-  let scene, camera, renderer, objectGroup;
-  let moonGroup = null;
-  const loader = new THREE.TextureLoader();
-
-  let isDragging = false;
-  let previousMousePosition = { x: 0, y: 0 };
-
-  function init() {
-    const container = document.getElementById('canvas-container');
-
-    scene = new THREE.Scene();
-    camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
-    camera.position.set(0, 0, 16);
-
-    renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.setClearColor(0x000000, 0);
-    renderer.setPixelRatio(window.devicePixelRatio);
-    renderer.outputColorSpace = THREE.SRGBColorSpace;
-    container.appendChild(renderer.domElement);
-
-    const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 1.2);
-    scene.add(hemiLight);
-    const sunLight = new THREE.DirectionalLight(0xffffff, 0.8);
-    sunLight.position.set(5, 3, 10);
-    scene.add(sunLight);
-
-    objectGroup = new THREE.Group();
-    objectGroup.position.set(3, 0, 0);
-    scene.add(objectGroup);
-
-    container.addEventListener('mousedown', e => {
-      isDragging = true;
-      previousMousePosition = { x: e.offsetX, y: e.offsetY };
-    });
-    window.addEventListener('mouseup', () => { isDragging = false; });
-    container.addEventListener('mousemove', e => {
-      if (!isDragging) return;
-      const dx = e.offsetX - previousMousePosition.x;
-      const dy = e.offsetY - previousMousePosition.y;
-      objectGroup.rotation.y += dx * 0.005;
-      objectGroup.rotation.x += dy * 0.005;
-      previousMousePosition = { x: e.offsetX, y: e.offsetY };
-    });
-
-    loadCategory('solar');
-    animate();
-  }
-
-  function loadCategory(catKey) {
-    currentCategory = catKey;
-    const data = database[catKey];
-    const dock = document.getElementById('nav-dock');
-    dock.innerHTML = '';
-
-    document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
-    document.querySelector(`button[onclick="switchCategory('${catKey}')"]`).classList.add('active');
-
-    data.forEach((item, index) => {
-      const btn = document.createElement('button');
-      btn.className = 'planet-btn';
-      btn.onclick = () => loadObject(index);
-      dock.appendChild(btn);
-    });
-
-    if (data.length > 0) {
-      dock.children[0].classList.add('active');
-      loadObject(0);
+    function onMouseUp() {
+      draggingObj = null;
+      isRotatingGroup = false;
     }
-  }
 
-  function loadObject(index) {
-    const data = database[currentCategory][index];
-    updateInfoPanel(data);
+    function onMouseMove(e) {
+      const dx = e.movementX || 0;
+      const dy = e.movementY || 0;
 
-    document.querySelectorAll('.planet-btn').forEach((b, i) => {
-      b.classList.toggle('active', i === index);
-    });
+      if (draggingObj) {
+        const rotSpeed = 0.005;
+        draggingObj.rotation.y += dx * rotSpeed;
+        draggingObj.rotation.x += dy * rotSpeed;
+      } else if (isRotatingGroup) {
+        objectGroup.rotation.y += dx * 0.005;
+        objectGroup.rotation.x += dy * 0.005;
+      }
+    }
 
-    while (objectGroup.children.length > 0) objectGroup.remove(objectGroup.children[0]);
-    moonGroup = null;
+    function loadCategory(catKey) {
+      currentCategory = catKey;
+      const data = database[catKey];
+      const dock = document.getElementById('nav-dock');
+      dock.innerHTML = '';
 
-    gsap.to(objectGroup.rotation, { x: 0, y: 0, z: 0, duration: 0.5 });
-    objectGroup.scale.set(0.1, 0.1, 0.1);
-    gsap.to(objectGroup.scale, { x: 1, y: 1, z: 1, duration: 1.0, ease: 'back.out(1.7)' });
+      document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+      const btnCat = document.querySelector(
+        `button[onclick="switchCategory('${catKey}')"]`
+      );
+      if (btnCat) btnCat.classList.add('active');
 
-    let baseRadius = 3.5;
-    if (data.scale) baseRadius *= data.scale;
+      data.forEach((item, index) => {
+        const btn = document.createElement('button');
+        btn.className = 'planet-btn';
+        btn.onclick = () => loadObject(index);
+        dock.appendChild(btn);
+      });
 
-    // === ЗВЁЗДЫ: шейдер innerCore без тора и фона ===
-    if (data.isNeonStar) {
-      const uniforms = {
-        time: { value: 0.0 },
-        uColorMain: { value: data.colorMain },
-        uColorSecondary: { value: data.colorSecondary }
-      };
+      if (data.length > 0) {
+        dock.children[0].classList.add('active');
+        loadObject(0);
+      }
+    }
 
-      const geo = new THREE.SphereGeometry(baseRadius, 64, 64);
-      const mat = new THREE.ShaderMaterial({
-        uniforms,
-        vertexShader: starVertexShader,
-        fragmentShader: starFragmentShader,
+    function setDockActive(index) {
+      document.querySelectorAll('.planet-btn').forEach((b, i) => {
+        b.classList.toggle('active', i === index);
+      });
+    }
+
+    function loadObject(index) {
+      const data = database[currentCategory][index];
+      updateInfoPanel(data);
+      setDockActive(index);
+
+      const isIframeBH = currentCategory === 'exotic' && data.isBlackholeIframe;
+      const isIframeGalaxy = currentCategory === 'exotic' && data.isGalaxyIframe;
+      const isIframeWormhole = currentCategory === 'exotic' && data.isWormholeIframe;
+
+      if (isIframeBH || isIframeGalaxy || isIframeWormhole) {
+        showIframe(true, data.iframeSrc || 'about:blank');
+      } else {
+        showIframe(false);
+      }
+
+      while (objectGroup.children.length > 0) objectGroup.remove(objectGroup.children[0]);
+      draggableObjects = [];
+      earthMesh = null;
+      moonMesh = null;
+
+      if (isIframeBH || isIframeGalaxy || isIframeWormhole) return;
+
+      gsap.to(objectGroup.rotation, { x: 0, y: 0, z: 0, duration: 0.5 });
+      objectGroup.scale.set(0.1, 0.1, 0.1);
+      gsap.to(objectGroup.scale, { x: 1, y: 1, z: 1, duration: 1.0, ease: 'back.out(1.7)' });
+
+      let baseRadius = 3.5;
+      if (data.scale) baseRadius *= data.scale;
+
+      if (data.isRoundStar) {
+        const geom = new THREE.SphereGeometry(baseRadius, 64, 64);
+        const mat = new THREE.MeshBasicMaterial({
+          color: data.color || 0xffffff,
+          toneMapped: false
+        });
+        const star = new THREE.Mesh(geom, mat);
+        objectGroup.add(star);
+        draggableObjects.push(star);
+        return;
+      }
+
+      if (data.isSun) {
+        const geo = new THREE.SphereGeometry(baseRadius, 64, 64);
+        const mat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+        loader.load(data.texture, tex => { mat.map = tex; mat.needsUpdate = true; });
+        const mesh = new THREE.Mesh(geo, mat);
+        objectGroup.add(mesh);
+        draggableObjects.push(mesh);
+        const glow = createGlowSprite(baseRadius * 3.2, new THREE.Color(0xfff2a0));
+        mesh.add(glow);
+        return;
+      }
+
+      if (data.isBlackholeIframe || data.isGalaxyIframe || data.isWormholeIframe) {
+        return;
+      }
+
+      createPlanet(data, baseRadius);
+    }
+
+    function createPlanet(data, r) {
+      if (data.key === 'earth') {
+        const earthGeo = new THREE.SphereGeometry(r, 64, 64);
+        const earthMat = new THREE.MeshStandardMaterial({
+          color: 0xffffff,
+          roughness: 0.5,
+          metalness: 0.1
+        });
+        loader.load(data.texture, tex => { earthMat.map = tex; earthMat.needsUpdate = true; });
+
+        earthMesh = new THREE.Mesh(earthGeo, earthMat);
+        objectGroup.add(earthMesh);
+        draggableObjects.push(earthMesh);
+
+        const moonGeo = new THREE.SphereGeometry(r * 0.27, 32, 32);
+        const moonMat = new THREE.MeshStandardMaterial({ color: 0xcccccc });
+        loader.load(texURLs.moon, tex => { moonMat.map = tex; moonMat.needsUpdate = true; });
+
+        moonMesh = new THREE.Mesh(moonGeo, moonMat);
+        moonMesh.position.set(3.0, 2.4, 1.0);
+        objectGroup.add(moonMesh);
+        draggableObjects.push(moonMesh);
+        return;
+      }
+
+      const geometry = new THREE.SphereGeometry(r, 64, 64);
+      const material = new THREE.MeshStandardMaterial({
+        color: data.color || 0x888888,
+        roughness: 0.5,
+        metalness: 0.1
+      });
+      if (data.texture) {
+        loader.load(data.texture, tex => {
+          material.map = tex;
+          material.needsUpdate = true;
+          material.color.setHex(0xffffff);
+        });
+      }
+      const planet = new THREE.Mesh(geometry, material);
+      objectGroup.add(planet);
+      draggableObjects.push(planet);
+
+      if (data.hasRings) {
+        addRingsFromOldCode(planet, r, data);
+      }
+    }
+
+    // ==== кольца из рабочего кода ====
+    function addRingsFromOldCode(mesh, r, data) {
+      const rInner = r * 1.3;
+      const rOuter = r * (data.ringSize || 1.8);
+
+      const ringGeo = new THREE.RingGeometry(rInner, rOuter, 128);
+      const pos = ringGeo.attributes.position;
+      const v3 = new THREE.Vector3();
+
+      for (let i = 0; i < pos.count; i++) {
+        v3.fromBufferAttribute(pos, i);
+        ringGeo.attributes.uv.setXY(
+          i,
+          (v3.length() - rInner) / (rOuter - rInner),
+          0.5
+        );
+      }
+
+      const op = data.ringOpacity !== undefined ? data.ringOpacity : 0.8;
+      const ringMat = new THREE.MeshBasicMaterial({
+        map: generateRingGradientFromOldCode(data.ringColor),
+        side: THREE.DoubleSide,
         transparent: true,
-        blending: THREE.AdditiveBlending,
+        opacity: op,
         depthWrite: false
       });
 
-      const mesh = new THREE.Mesh(geo, mat);
-      mesh.userData.uniforms = uniforms;
-      objectGroup.add(mesh);
-      return;
-    }
+      const ring = new THREE.Mesh(ringGeo, ringMat);
+      ring.rotation.x = Math.PI / 2;
+      ring.rotation.y = -0.1;
 
-    // === Солнце ===
-    if (data.isSun) {
-      const geo = new THREE.SphereGeometry(baseRadius, 64, 64);
-      const mat = new THREE.MeshBasicMaterial({ color: 0xffffff });
-      loader.load(data.texture, tex => { mat.map = tex; mat.needsUpdate = true; });
-      const mesh = new THREE.Mesh(geo, mat);
-      mesh.add(createGlow(baseRadius * 2.6, 0xffaa00));
-      objectGroup.add(mesh);
-      return;
-    }
-
-    // === Экзотика (заглушки) ===
-    if (data.isBlackHole) { createBlackHole(baseRadius); return; }
-    if (data.isNebula || data.isGalaxy || data.isQuasar || data.isMagnetar || data.isWormhole) {
-      createExoticObject(data, baseRadius); return;
-    }
-
-    // === Планеты ===
-    const geometry = new THREE.SphereGeometry(baseRadius, 64, 64);
-    const material = new THREE.MeshStandardMaterial({
-      color: data.color || 0x888888,
-      roughness: 0.5,
-      metalness: 0.1
-    });
-    if (data.texture) {
-      loader.load(data.texture, tex => {
-        material.map = tex;
-        material.needsUpdate = true;
-        material.color.setHex(0xffffff);
-      });
-    }
-    const mesh = new THREE.Mesh(geometry, material);
-    objectGroup.add(mesh);
-
-    if (data.hasMoon) {
-      moonGroup = new THREE.Group();
-      mesh.add(moonGroup);
-      const moonGeo = new THREE.SphereGeometry(baseRadius * 0.27, 32, 32);
-      const moonMat = new THREE.MeshStandardMaterial({ color: 0xcccccc });
-      loader.load(texURLs.moon, tex => { moonMat.map = tex; moonMat.needsUpdate = true; });
-      const moonMesh = new THREE.Mesh(moonGeo, moonMat);
-      moonMesh.position.x = baseRadius * 2.0;
-      moonGroup.add(moonMesh);
-    }
-
-    if (data.hasRings) addRings(mesh, baseRadius, data);
-  }
-
-  // ==== кольца ====
-  function addRings(mesh, r, data) {
-    const rInner = r * 1.3;
-    const rOuter = r * (data.ringSize || 1.8);
-    const ringGeo = new THREE.RingGeometry(rInner, rOuter, 128);
-    const pos = ringGeo.attributes.position;
-    const v3 = new THREE.Vector3();
-    for (let i = 0; i < pos.count; i++) {
-      v3.fromBufferAttribute(pos, i);
-      ringGeo.attributes.uv.setXY(i, (v3.length() - rInner) / (rOuter - rInner), 0.5);
-    }
-    const op = data.ringOpacity !== undefined ? data.ringOpacity : 0.8;
-    const ringMat = new THREE.MeshBasicMaterial({
-      map: generateRingGradient(data.ringColor),
-      side: THREE.DoubleSide,
-      transparent: true,
-      opacity: op,
-      depthWrite: false
-    });
-    const ring = new THREE.Mesh(ringGeo, ringMat);
-    ring.rotation.x = Math.PI / 2;
-    ring.rotation.y = -0.1;
-    if (data.verticalRings) {
-      ring.rotation.x = 0;
-      ring.rotation.y = Math.PI / 2;
-    }
-    mesh.add(ring);
-  }
-
-  function generateRingGradient(colorHex) {
-    const canvas = document.createElement('canvas');
-    canvas.width = 256; canvas.height = 1;
-    const ctx = canvas.getContext('2d');
-    const grd = ctx.createLinearGradient(0, 0, 256, 0);
-    const c = new THREE.Color(colorHex || 0xffeedd);
-    const base = `${Math.floor(c.r * 255)},${Math.floor(c.g * 255)},${Math.floor(c.b * 255)}`;
-    grd.addColorStop(0, 'rgba(0,0,0,0)');
-    grd.addColorStop(0.2, `rgba(${base},0.8)`);
-    grd.addColorStop(0.5, `rgba(${base},0.2)`);
-    grd.addColorStop(0.8, `rgba(${base},0.8)`);
-    grd.addColorStop(1, 'rgba(0,0,0,0)');
-    ctx.fillStyle = grd;
-    ctx.fillRect(0, 0, 256, 1);
-    return new THREE.CanvasTexture(canvas);
-  }
-
-  // ==== заглушки экзотических объектов ====
-  function createBlackHole(r) {
-    const disk = new THREE.Mesh(
-      new THREE.RingGeometry(r * 1.2, r * 3, 64),
-      new THREE.MeshBasicMaterial({ color: 0xff4400, side: 2, transparent: true, opacity: 0.8 })
-    );
-    disk.rotation.x = Math.PI / 3;
-    gsap.to(disk.rotation, { z: 6.28, repeat: -1, duration: 5, ease: 'none' });
-    objectGroup.add(disk);
-
-    const hole = new THREE.Mesh(
-      new THREE.SphereGeometry(r, 32, 32),
-      new THREE.MeshBasicMaterial({ color: 0x000000 })
-    );
-    objectGroup.add(hole);
-  }
-
-  function createExoticObject(data, r) {
-    const mat = new THREE.MeshBasicMaterial({ color: data.color || 0xff00ff, wireframe: true });
-    const mesh = new THREE.Mesh(new THREE.SphereGeometry(r, 16, 16), mat);
-    objectGroup.add(mesh);
-  }
-
-  // ==== свечение для солнца ====
-  function createGlow(size, color) {
-    const spriteMat = new THREE.SpriteMaterial({
-      map: new THREE.CanvasTexture(generateGlowTexture(new THREE.Color(color))),
-      color: color,
-      transparent: true,
-      blending: THREE.AdditiveBlending,
-      opacity: 0.6,
-      depthWrite: false
-    });
-    const sprite = new THREE.Sprite(spriteMat);
-    sprite.scale.set(size, size, 1);
-    return sprite;
-  }
-
-  function generateGlowTexture(c) {
-    const canvas = document.createElement('canvas');
-    canvas.width = 64; canvas.height = 64;
-    const ctx = canvas.getContext('2d');
-    const gradient = ctx.createRadialGradient(32, 32, 0, 32, 32, 32);
-    const r = Math.floor(c.r * 255);
-    const g = Math.floor(c.g * 255);
-    const b = Math.floor(c.b * 255);
-    gradient.addColorStop(0, `rgba(${r},${g},${b},1)`);
-    gradient.addColorStop(0.5, `rgba(${r},${g},${b},0.3)`);
-    gradient.addColorStop(1, 'rgba(0,0,0,0)');
-    ctx.fillStyle = gradient;
-    ctx.fillRect(0, 0, 64, 64);
-    return canvas;
-  }
-
-  // ==== UI ====
-  function updateInfoPanel(data) {
-    const content = document.getElementById('info-content');
-    content.classList.add('fade-out');
-    setTimeout(() => {
-      document.getElementById('p-name').innerText = data.name;
-      document.getElementById('p-type').innerText = data.type;
-      document.getElementById('p-desc').innerText = data.desc;
-      content.classList.remove('fade-out');
-    }, 300);
-  }
-
-  function animate() {
-    requestAnimationFrame(animate);
-    const t = performance.now() * 0.001;
-
-    if (!isDragging && objectGroup.children.length > 0) objectGroup.rotation.y += 0.001;
-    if (moonGroup) moonGroup.rotation.y += 0.005;
-
-    // обновляем time только у шейдерных звёзд
-    objectGroup.traverse(obj => {
-      if (obj.isMesh && obj.userData && obj.userData.uniforms) {
-        obj.userData.uniforms.time.value = t;
+      if (data.verticalRings) {
+        ring.rotation.x = 0;
+        ring.rotation.y = Math.PI / 2;
       }
+
+      mesh.add(ring);
+    }
+
+    function generateRingGradientFromOldCode(colorHex) {
+      const canvas = document.createElement('canvas');
+      canvas.width = 256; canvas.height = 1;
+      const ctx = canvas.getContext('2d');
+      const grd = ctx.createLinearGradient(0, 0, 256, 0);
+
+      const c = new THREE.Color(colorHex || 0xffeedd);
+      const base = `${Math.floor(c.r * 255)},${Math.floor(c.g * 255)},${Math.floor(c.b * 255)}`;
+
+      grd.addColorStop(0,   'rgba(0,0,0,0)');
+      grd.addColorStop(0.2, `rgba(${base},0.8)`);
+      grd.addColorStop(0.5, `rgba(${base},0.2)`);
+      grd.addColorStop(0.8, `rgba(${base},0.8)`);
+      grd.addColorStop(1,   'rgba(0,0,0,0)');
+
+      ctx.fillStyle = grd;
+      ctx.fillRect(0, 0, 256, 1);
+
+      return new THREE.CanvasTexture(canvas);
+    }
+
+    function createGlowSprite(size, color) {
+      const canvas = document.createElement('canvas');
+      canvas.width = 256; canvas.height = 256;
+      const ctx = canvas.getContext('2d');
+      const grd = ctx.createRadialGradient(128, 128, 0, 128, 128, 128);
+      const r = Math.floor(color.r * 255);
+      const g = Math.floor(color.g * 255);
+      const b = Math.floor(color.b * 255);
+      grd.addColorStop(0.0, `rgba(${r},${g},${b},1)`);
+      grd.addColorStop(0.55, `rgba(${r},${g},${b},0.35)`);
+      grd.addColorStop(1.0, 'rgba(0,0,0,0)');
+      ctx.fillStyle = grd;
+      ctx.fillRect(0, 0, 256, 256);
+      const tex = new THREE.CanvasTexture(canvas);
+      tex.minFilter = THREE.LinearFilter;
+      tex.magFilter = THREE.LinearFilter;
+      const mat = new THREE.SpriteMaterial({
+        map: tex,
+        color: 0xffffff,
+        transparent: true,
+        depthWrite: false,
+        blending: THREE.AdditiveBlending
+      });
+      const sprite = new THREE.Sprite(mat);
+      sprite.scale.set(size, size, 1);
+      return sprite;
+    }
+
+    function updateInfoPanel(data) {
+      const content = document.getElementById('info-content');
+      content.classList.add('fade-out');
+      setTimeout(() => {
+        const titleEl = document.getElementById('p-name');
+        titleEl.innerText = data.name;
+        titleEl.classList.remove('betelgeuse-small', 'gargantua-small', 'wormhole-small');
+        if (data.key === 'betelgeuse') titleEl.classList.add('betelgeuse-small');
+        if (data.key === 'blackhole')  titleEl.classList.add('gargantua-small');
+        if (data.key === 'wormhole')   titleEl.classList.add('wormhole-small');
+
+        document.getElementById('p-type').innerText = data.type || '';
+        document.getElementById('p-desc').innerText = data.desc || '';
+
+        const statsDiv = document.getElementById('p-stats');
+        statsDiv.innerHTML = '';
+
+        const info = data.info || {};
+
+        function addRow(label, value) {
+          if (!value) return;
+          const row = document.createElement('div');
+          row.textContent = `${label.toUpperCase()}: ${value}`;
+          statsDiv.appendChild(row);
+        }
+
+        addRow('класс', info.класс);
+        addRow('масса', info.масса);
+        addRow('радиус', info.радиус);
+        addRow('возраст', info.возраст);
+
+        if (info.спутники && (info.спутники.количество || info.спутники.список)) {
+          if (info.спутники.количество) {
+            addRow('спутники', info.спутники.количество);
+          }
+          if (Array.isArray(info.спутники.список) && info.спутники.список.length) {
+            addRow('популярные спутники', info.спутники.список.join(', '));
+          }
+        }
+
+        addRow('расстояние', info.расстояние);
+
+        if (Array.isArray(info.факты) && info.факты.length) {
+          info.факты.forEach((fact, i) => addRow(`факт ${i + 1}`, fact));
+        }
+
+        content.classList.remove('fade-out');
+      }, 300);
+    }
+
+    function animate() {
+      requestAnimationFrame(animate);
+      const t = clock ? clock.getElapsedTime() : 0;
+
+      if (!isRotatingGroup && objectGroup.children.length > 0) {
+        objectGroup.rotation.y += 0.0008;
+      }
+      if (earthMesh) earthMesh.rotation.y += 0.0015;
+      if (moonMesh)  moonMesh.rotation.y  += 0.0015;
+
+      renderer.render(scene, camera);
+    }
+
+    function switchCategory(cat) {
+      if (currentCategory !== cat) loadCategory(cat);
+    }
+
+    function exitFromSim() {
+      if (window.parent && typeof window.parent.endJourney === 'function') {
+        window.parent.endJourney();
+      } else {
+        window.location.href = 'index.html';
+      }
+    }
+
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
     });
 
-    renderer.render(scene, camera);
-  }
-
-  function switchCategory(cat) {
-    if (currentCategory !== cat) loadCategory(cat);
-  }
-
-  function exitFromSim() {
-    if (window.parent && typeof window.parent.endJourney === 'function') {
-      window.parent.endJourney();
-    } else {
-      window.location.href = 'index.html';
-    }
-  }
-
-  window.addEventListener('resize', () => {
-    camera.aspect = window.innerWidth / window.innerHeight;
-    camera.updateProjectionMatrix();
-    renderer.setSize(window.innerWidth, window.innerHeight);
-  });
-
-  init();
-</script>
-
-
-
-
-
-
+    init();
+  </script>
 </body>
 </html>

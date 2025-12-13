@@ -246,6 +246,7 @@
       width: 100%;
       box-sizing: border-box;
       min-height: 120px;
+      text-decoration: none;
     }
 
     .lib-pill-title {
@@ -363,30 +364,30 @@
 
       <section class="content-section">
         <div class="library-row">
-          <button class="lib-pill">
+          <a class="lib-pill" href="planets/">
             <span class="lib-pill-title">Планеты</span>
             <span class="lib-pill-sub">8 основных планет системы</span>
-          </button>
-          <button class="lib-pill">
+          </a>
+          <a class="lib-pill" href="stars/">
             <span class="lib-pill-title">Звезды</span>
             <span class="lib-pill-sub">Типы звезд и их эволюция</span>
-          </button>
-          <button class="lib-pill">
+          </a>
+          <a class="lib-pill" href="blackholes/">
             <span class="lib-pill-title">Черные дыры</span>
             <span class="lib-pill-sub">Загадки гравитации</span>
-          </button>
-          <button class="lib-pill">
+          </a>
+          <a class="lib-pill" href="tech/">
             <span class="lib-pill-title">Космическая техника</span>
             <span class="lib-pill-sub">Ракеты, корабли, спутники</span>
-          </button>
-          <button class="lib-pill">
+          </a>
+          <a class="lib-pill" href="small-bodies/">
             <span class="lib-pill-title">Малые тела</span>
             <span class="lib-pill-sub">Кометы, астероиды и метеориты</span>
-          </button>
-          <button class="lib-pill">
+          </a>
+          <a class="lib-pill" href="night-sky/">
             <span class="lib-pill-title">Ночное небо</span>
             <span class="lib-pill-sub">Созвездия и гид наблюдателя</span>
-          </button>
+          </a>
         </div>
 
         <div class="library-footer">
@@ -396,7 +397,6 @@
     </div>
   </div>
 
-  <!-- 3D СИМУЛЯЦИЯ В IFRAME -->
   <div id="sim-screen" class="screen hidden">
     <iframe
       id="sim-iframe"
@@ -499,101 +499,92 @@
     }
     animate();
 
-// ВХОД В СИМУЛЯЦИЮ
-window.startJourney = function () {
-  isExploring = true;
+    window.startJourney = function () {
+      isExploring = true;
 
-  const landing = document.getElementById('landing-screen');
-  const simScreen = document.getElementById('sim-screen');
-  const overlay = document.getElementById('warp-overlay');
+      const landing = document.getElementById('landing-screen');
+      const simScreen = document.getElementById('sim-screen');
+      const overlay = document.getElementById('warp-overlay');
 
-  // Плавно гасим блёстки Space.js
-  spaceCanvas.style.transition = 'opacity 0.7s ease';
-  spaceCanvas.style.opacity = '0';
+      spaceCanvas.style.transition = 'opacity 0.7s ease';
+      spaceCanvas.style.opacity = '0';
 
-  // Спрятать декоративную планету и её обводку
-  planetMesh.visible = false;
-  sunLight.visible = false;
-  rimLight.visible = false;
-  ambientLight.visible = false;
+      planetMesh.visible = false;
+      sunLight.visible = false;
+      rimLight.visible = false;
+      ambientLight.visible = false;
 
-  landing.classList.remove('active');
-  setTimeout(() => landing.classList.add('hidden'), 500);
+      landing.classList.remove('active');
+      setTimeout(() => landing.classList.add('hidden'), 500);
 
-  gsap.to(starsMesh.scale, {
-    z: 5,
-    duration: 1.5,
-    ease: 'power2.in'
-  });
-  gsap.to(camera.position, {
-    z: 20,
-    duration: 2,
-    ease: 'power2.inOut'
-  });
+      gsap.to(starsMesh.scale, {
+        z: 5,
+        duration: 1.5,
+        ease: 'power2.in'
+      });
+      gsap.to(camera.position, {
+        z: 20,
+        duration: 2,
+        ease: 'power2.inOut'
+      });
 
-  setTimeout(() => {
-    overlay.style.opacity = '1';
+      setTimeout(() => {
+        overlay.style.opacity = '1';
 
-    setTimeout(() => {
-      simScreen.classList.remove('hidden');
-      setTimeout(() => simScreen.classList.add('active'), 10);
+        setTimeout(() => {
+          simScreen.classList.remove('hidden');
+          setTimeout(() => simScreen.classList.add('active'), 10);
 
-      overlay.style.opacity = '0';
-      gsap.to(starsMesh.scale, { z: 1, duration: 2 });
-    }, 500);
-  }, 1500);
-};
+          overlay.style.opacity = '0';
+          gsap.to(starsMesh.scale, { z: 1, duration: 2 });
+        }, 500);
+      }, 1500);
+    };
 
+    window.endJourney = function () {
+      if (!isExploring) return;
 
+      const landing = document.getElementById('landing-screen');
+      const simScreen = document.getElementById('sim-screen');
+      const overlay = document.getElementById('warp-overlay');
 
-// ВЫХОД ИЗ СИМУЛЯЦИИ
-window.endJourney = function () {
-  if (!isExploring) return;
+      gsap.to(starsMesh.scale, {
+        z: 1,
+        duration: 1,
+        ease: 'power2.out'
+      });
+      gsap.to(camera.position, {
+        z: 40,
+        duration: 1.2,
+        ease: 'power2.out'
+      });
 
-  const landing = document.getElementById('landing-screen');
-  const simScreen = document.getElementById('sim-screen');
-  const overlay = document.getElementById('warp-overlay');
+      overlay.style.opacity = '1';
 
-  gsap.to(starsMesh.scale, {
-    z: 1,
-    duration: 1,
-    ease: 'power2.out'
-  });
-  gsap.to(camera.position, {
-    z: 40,
-    duration: 1.2,
-    ease: 'power2.out'
-  });
+      setTimeout(() => {
+        if (simScreen) {
+          simScreen.classList.remove('active');
+          setTimeout(() => simScreen.classList.add('hidden'), 200);
+        }
 
-  overlay.style.opacity = '1';
+        landing.classList.remove('hidden');
+        setTimeout(() => landing.classList.add('active'), 10);
 
-  setTimeout(() => {
-    if (simScreen) {
-      simScreen.classList.remove('active');
-      setTimeout(() => simScreen.classList.add('hidden'), 200);
-    }
+        isExploring = false;
 
-    landing.classList.remove('hidden');
-    setTimeout(() => landing.classList.add('active'), 10);
+        planetMesh.visible = true;
+        sunLight.visible = true;
+        rimLight.visible = true;
+        ambientLight.visible = true;
 
-    isExploring = false;
+        spaceCanvas.style.transition = 'opacity 0.7s ease';
+        spaceCanvas.style.opacity = '1';
 
-    // Вернуть декоративную планету, свет и блёстки
-    planetMesh.visible = true;
-    sunLight.visible = true;
-    rimLight.visible = true;
-    ambientLight.visible = true;
-
-    spaceCanvas.style.transition = 'opacity 0.7s ease';
-    spaceCanvas.style.opacity = '1';
-
-    setTimeout(() => {
-      overlay.style.opacity = '0';
-    }, 300);
-  }, 500);
-};
-
-
+        setTimeout(() => {
+          overlay.style.opacity = '0';
+        }, 300);
+      }, 500);
+    };
 
     const observerOptions = { threshold: 0.1 };
     const observer = new IntersectionObserver(entries => {

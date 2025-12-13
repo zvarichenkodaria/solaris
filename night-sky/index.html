@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SOLARIS Atlas | Ночное небо</title>
+  <!-- тот же <style>, что и в planets/index.html -->
+</head>
+<body>
+  <div class="star-noise"></div>
+
+  <div class="notebook-wrapper">
+    <div class="notebook-shadow"></div>
+    <main class="notebook" aria-label="Полевой блокнот: ночное небо">
+      <div class="ring-column">
+        <div class="ring ring--accent"></div>
+        <div class="ring"></div>
+        <div class="ring"></div>
+      </div>
+
+      <div class="tape-tag">
+        <span class="tape-dot"></span>
+        <span>LOG 06 / SECTOR SKY</span>
+      </div>
+
+      <header class="page-header">
+        <h1 class="page-title">Ночное небо</h1>
+        <div class="page-subtitle">Созвездия и ориентирование наблюдателя</div>
+      </header>
+
+      <div class="page-meta">
+        <span>EXPLORER: ID-742</span>
+        <span>TRACK: SOLARIS / ATLAS</span>
+        <span>MODULE: SKY LOG</span>
+      </div>
+
+      <div class="page-divider"></div>
+
+      <section class="page-body">
+        <section class="log-block">
+          <div class="log-label">Полевые заметки</div>
+          <div class="log-text">
+            Карта ночного неба связывает точки света в узнаваемые <em>созвездия</em>, помогая ориентироваться в пространстве без приборов.  
+            Видимая конфигурация звёзд меняется с широтой и временем года, задавая собственный ритм наблюдений.  
+          </div>
+
+          <ul class="log-list">
+            <li>Полярные звезды служат опорой для определения направления на север.</li>
+            <li>Сезонные созвездия маркируют положение планеты на орбите вокруг звезды.</li>
+            <li>Темные районы и полосы — следствие межзвёздной пыли в диске галактики.</li>
+          </ul>
+        </section>
+
+        <aside class="sidebar-block" aria-label="Краткие данные по ночному небу">
+          <div class="chip-row">
+            <span class="chip">constellation map</span>
+            <span class="chip">polar star</span>
+            <span class="chip">seasonal sky</span>
+          </div>
+
+          <div class="data-card">
+            <div class="data-title">Наблюдательные заметки</div>
+            <table class="data-table">
+              <tr>
+                <td>Условия</td>
+                <td>темное небо</td>
+              </tr>
+              <tr>
+                <td>Инструмент</td>
+                <td>глаз / бинокль</td>
+              </tr>
+              <tr>
+                <td>Магнитуда</td>
+                <td>до ~6m</td>
+              </tr>
+              <tr>
+                <td>Лучшее время</td>
+                <td>ночь без Луны</td>
+              </tr>
+            </table>
+          </div>
+
+          <a href="/" class="back-link">вернуться к карте</a>
+        </aside>
+      </section>
+    </main>
+  </div>
+
+  <script src="/menu.js"></script>
+</body>
+</html>
