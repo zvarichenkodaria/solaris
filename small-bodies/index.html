@@ -3,89 +3,1089 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>SOLARIS Atlas | Малые тела</title>
-  <!-- тот же <style>, что и в planets/index.html -->
+  <title>SOLARIS Атлас | Малые тела</title>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@300;600&display=swap');
+
+    :root {
+      --color-blue: #00d2ff;
+      --color-purple: #bc13fe;
+      --color-sun: #ffd700;
+      --bg-dark: #050505;
+      --glass: rgba(255, 255, 255, 0.05);
+      --tape-reserve: 150px;
+    }
+
+    * { box-sizing: border-box; }
+
+    html {
+      scroll-behavior: smooth;
+      scroll-padding-top: 110px;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg-dark);
+      color: #f5f5f5;
+      font-family: 'Exo 2', sans-serif;
+      padding: 120px 20px 40px;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    #canvas-container {
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      pointer-events: none;
+    }
+
+    .page-shell {
+      position: relative;
+      max-width: 1400px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 260px minmax(0, 1.2fr) 260px;
+      column-gap: 40px;
+    }
+
+    .side-panel {
+      position: fixed;
+      top: 120px;
+      width: 260px;
+      border-radius: 18px;
+      border: 1px solid rgba(0,210,255,0.25);
+      background: radial-gradient(circle at top, rgba(0,210,255,0.15), rgba(3,8,16,0.92));
+      box-shadow:
+        0 0 22px rgba(0,210,255,0.4),
+        inset 0 0 18px rgba(0,0,0,0.9);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      padding: 12px 12px 14px;
+      opacity: 0.95;
+      z-index: 5;
+    }
+
+    .side-panel--left {
+      left: calc(50% - 1400px / 2);
+      margin-left: 20px;
+    }
+
+    .side-panel--right {
+      right: calc(50% - 1400px / 2);
+      margin-right: 20px;
+      border-color: rgba(188,19,254,0.35);
+      box-shadow:
+        0 0 22px rgba(188,19,254,0.5),
+        inset 0 0 18px rgba(0,0,0,0.9);
+      background: radial-gradient(circle at top, rgba(188,19,254,0.2), rgba(5,6,18,0.96));
+    }
+
+    @media (max-width: 1400px) {
+      .side-panel--left { left: 20px; margin-left: 0; }
+      .side-panel--right { right: 20px; margin-right: 0; }
+    }
+
+    .side-panel-title-main {
+      font-size: 0.7rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: rgba(180,210,255,0.9);
+      margin-bottom: 8px;
+    }
+
+    .side-panel-subtitle {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 0.73rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: rgba(230,240,255,0.9);
+      padding-bottom: 6px;
+      border-bottom: 1px solid rgba(255,255,255,0.18);
+      margin-bottom: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .side-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: var(--color-sun);
+      box-shadow: 0 0 12px rgba(255,215,0,0.9);
+    }
+
+    .panel-grid {
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(0, 255, 255, 0.17) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 255, 255, 0.11) 1px, transparent 1px);
+      background-size: 18px 18px;
+      opacity: 0.35;
+      mix-blend-mode: screen;
+      pointer-events: none;
+    }
+
+    .side-panel-lines {
+      position: relative;
+      flex: 1;
+      overflow: hidden;
+      margin-top: 6px;
+      border-radius: 10px;
+    }
+
+    .scan-strip {
+      position: absolute;
+      left: 0;
+      right: 0;
+      height: 60px;
+      background: linear-gradient(
+        to bottom,
+        rgba(0,210,255,0.0),
+        rgba(0,210,255,0.2),
+        rgba(0,210,255,0.0)
+      );
+      opacity: 0.4;
+      animation: panelScan 6s linear infinite;
+    }
+
+    .scan-strip:nth-child(2) { animation-delay: -2s; }
+    .scan-strip:nth-child(3) { animation-delay: -4s; }
+
+    @keyframes panelScan {
+      0%   { transform: translateY(-80px); }
+      100% { transform: translateY(220%); }
+    }
+
+    .notes-nav {
+      position: relative;
+      z-index: 1;
+      margin-top: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      font-size: 0.8rem;
+    }
+
+    .notes-nav-button {
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.2);
+      background: rgba(3,8,16,0.9);
+      color: #e5f0ff;
+      font-family: 'Exo 2', sans-serif;
+      font-size: 0.8rem;
+      padding: 6px 8px;
+      text-align: left;
+      cursor: pointer;
+      transition: 0.2s;
+      display: block;
+      width: 100%;
+      white-space: normal;
+      line-height: 1.4;
+    }
+
+    .notes-nav-button:hover {
+      border-color: var(--color-blue);
+      box-shadow: 0 0 10px rgba(0,210,255,0.6);
+      color: var(--color-blue);
+    }
+
+    .quiz-body {
+      position: relative;
+      z-index: 1;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      font-size: 0.8rem;
+      color: rgba(225,235,255,0.95);
+      margin-top: 8px;
+    }
+
+    .quiz-question {
+      margin-bottom: 4px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+    }
+
+    .quiz-select {
+      width: 100%;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.25);
+      background: rgba(5,5,12,0.9);
+      color: #fff;
+      font-family: inherit;
+      font-size: 0.8rem;
+      padding: 6px 8px;
+      outline: none;
+    }
+
+    .quiz-select option { background: #05050a; }
+
+    .quiz-buttons {
+      display: flex;
+      gap: 8px;
+      margin-top: 6px;
+    }
+
+    .quiz-btn {
+      flex: 1;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.35);
+      background: transparent;
+      color: #fff;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 0.7rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      padding: 6px 6px;
+      cursor: pointer;
+      transition: 0.25s;
+    }
+
+    .quiz-btn:hover {
+      border-color: var(--color-blue);
+      box-shadow: 0 0 12px rgba(0,210,255,0.5);
+      color: var(--color-blue);
+    }
+
+    .quiz-status {
+      margin-top: 8px;
+      font-size: 0.75rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      text-align: center;
+      padding: 4px 6px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.2);
+      background: rgba(0,0,0,0.6);
+    }
+
+    .quiz-status--bad {
+      color: #ff5c5c;
+      border-color: rgba(255,92,92,0.7);
+      box-shadow: 0 0 12px rgba(255,92,92,0.6);
+    }
+
+    .quiz-status--mid {
+      color: #ffd86b;
+      border-color: rgba(255,216,107,0.7);
+      box-shadow: 0 0 12px rgba(255,216,107,0.5);
+    }
+
+    .quiz-status--good {
+      color: #7dff9c;
+      border-color: rgba(125,255,156,0.7);
+      box-shadow: 0 0 12px rgba(125,255,156,0.6);
+    }
+
+    .page-wrapper {
+      position: relative;
+      z-index: 1;
+      grid-column: 2 / 3;
+      display: flex;
+      flex-direction: column;
+      gap: 40px;
+    }
+
+    .card-separator {
+      height: 1px;
+      width: 100%;
+      background: radial-gradient(circle, rgba(0,210,255,0.4), transparent 70%);
+      opacity: 0.5;
+    }
+
+    .notebook {
+      position: relative;
+      background: rgba(10, 10, 16, 0.9);
+      backdrop-filter: blur(18px);
+      border-radius: 24px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow:
+        0 32px 80px rgba(0, 0, 0, 0.9),
+        0 0 0 1px rgba(0, 0, 0, 0.8);
+      padding: 26px 28px 26px 80px;
+      overflow: hidden;
+    }
+
+    .notebook::before { content: none; }
+
+    .notebook::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 64px;
+      width: 2px;
+      height: 100%;
+      background: linear-gradient(
+        to bottom,
+        rgba(0,210,255,0.5),
+        rgba(255,255,255,0.1),
+        rgba(188,19,254,0.5)
+      );
+      box-shadow: 0 0 12px rgba(0,210,255,0.6);
+      opacity: 0.9;
+    }
+
+    .ring-column {
+      position: absolute;
+      top: 18px;
+      left: 32px;
+      width: 22px;
+      height: calc(100% - 36px);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      align-items: center;
+      pointer-events: none;
+    }
+
+    .ring {
+      width: 14px;
+      height: 14px;
+      border-radius: 999px;
+      border: 2px solid rgba(120, 200, 255, 0.6);
+      box-shadow:
+        0 0 8px rgba(0,210,255,0.9),
+        inset 0 0 4px rgba(0,0,0,0.8);
+      background: radial-gradient(circle, rgba(0,210,255,0.9) 0, transparent 60%);
+    }
+
+    .ring--accent {
+      border-color: rgba(255, 215, 0, 0.9);
+      box-shadow:
+        0 0 10px rgba(255,215,0,1),
+        inset 0 0 4px rgba(0,0,0,0.9);
+      background: radial-gradient(circle, rgba(255,215,0,1) 0, transparent 60%);
+    }
+
+    .tape-tag {
+      position: absolute;
+      top: 22px;
+      right: 32px;
+      padding: 4px 14px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.35);
+      background: linear-gradient(120deg, rgba(0,0,0,0.75), rgba(40,40,60,0.9));
+      box-shadow:
+        0 0 16px rgba(0,210,255,0.6),
+        inset 0 0 4px rgba(0,0,0,0.8);
+      font-family: 'Orbitron', sans-serif;
+      font-size: 0.7rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.9);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      z-index: 2;
+      max-width: 45%;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .tape-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 999px;
+      background: var(--color-sun);
+      box-shadow: 0 0 10px rgba(255,215,0,0.9);
+      flex-shrink: 0;
+    }
+
+    .page-header {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-bottom: 20px;
+      padding-right: var(--tape-reserve);
+    }
+
+    .page-title {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.4rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      margin: 0;
+      background: linear-gradient(135deg, #ffffff, var(--color-blue));
+      background-clip: text;
+      color: transparent;
+      -webkit-text-fill-color: transparent;
+      text-shadow: 0 0 18px rgba(0,210,255,0.3);
+      white-space: normal;
+      word-break: break-word;
+      line-height: 1.3;
+      max-width: calc(100% - (var(--tape-reserve) + 10px));
+    }
+
+    .page-subtitle {
+      font-size: 0.9rem;
+      text-transform: none;
+      letter-spacing: 0.06em;
+      color: rgba(200, 200, 220, 0.9);
+    }
+
+    .page-meta {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px 24px;
+      font-size: 0.75rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: rgba(180, 200, 220, 0.8);
+      margin-bottom: 12px;
+    }
+
+    .page-meta span {
+      border-left: 1px solid rgba(255,255,255,0.18);
+      padding-left: 10px;
+      white-space: normal;
+    }
+
+    .page-divider {
+      position: relative;
+      z-index: 2;
+      height: 1px;
+      margin-bottom: 18px;
+      background: linear-gradient(
+        to right,
+        rgba(0,210,255,0.0),
+        rgba(0,210,255,0.9),
+        rgba(188,19,254,0.7),
+        rgba(255,255,255,0.1)
+      );
+      box-shadow: 0 0 22px rgba(0,210,255,0.4);
+      opacity: 0.9;
+    }
+
+    .page-body {
+      position: relative;
+      z-index: 2;
+      display: grid;
+      grid-template-columns: minmax(0, 1.5fr) minmax(0, 1.1fr);
+      gap: 24px;
+    }
+
+    .log-block {
+      padding-right: 10px;
+      border-right: 1px dashed rgba(255,255,255,0.14);
+    }
+
+    .log-label {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 0.78rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: rgba(0,210,255,0.9);
+      margin-bottom: 6px;
+    }
+
+    .log-text {
+      font-size: 0.95rem;
+      line-height: 1.6;
+      color: rgba(235, 238, 250, 0.95);
+    }
+
+    .log-list {
+      margin: 12px 0 0;
+      padding-left: 16px;
+      list-style: none;
+      border-left: 1px solid rgba(255,255,255,0.16);
+    }
+
+    .log-list li {
+      font-size: 0.9rem;
+      color: rgba(210, 220, 245, 0.95);
+      margin-bottom: 6px;
+      position: relative;
+      padding-left: 12px;
+    }
+
+    .log-list li::before {
+      content: '◆';
+      position: absolute;
+      left: -3px;
+      top: 0;
+      font-size: 0.5rem;
+      color: var(--color-blue);
+      text-shadow: 0 0 10px rgba(0,210,255,0.7);
+    }
+
+    .sidebar-block {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .data-card {
+      border-radius: 16px;
+      padding: 10px 14px;
+      background: radial-gradient(circle at top left, rgba(0,210,255,0.22), rgba(5,5,12,0.96));
+      border: 1px solid rgba(255,255,255,0.16);
+      box-shadow: 0 16px 30px rgba(0,0,0,0.9);
+      font-size: 0.83rem;
+      color: rgba(220,230,255,0.95);
+    }
+
+    .data-title {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 0.8rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: rgba(0,210,255,0.95);
+      margin-bottom: 6px;
+    }
+
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      border-spacing: 0;
+    }
+
+    .data-table td {
+      padding: 4px 0;
+      font-size: 0.8rem;
+    }
+
+    .data-table td:first-child {
+      color: rgba(180,200,230,0.85);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      font-size: 0.72rem;
+    }
+
+    .data-table td:last-child {
+      text-align: right;
+      color: rgba(240,245,255,0.98);
+      font-family: 'Orbitron', sans-serif;
+      font-size: 0.8rem;
+    }
+
+    .planet-image {
+      width: 100%;
+      border-radius: 14px;
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,0.22);
+      box-shadow: 0 0 22px rgba(0, 210, 255, 0.6);
+      background: radial-gradient(circle at top, rgba(0,210,255,0.25), rgba(3,3,10,0.98));
+    }
+
+    .planet-image img {
+      display: block;
+      width: 100%;
+      height: auto;
+      object-fit: cover;
+      opacity: 0.95;
+    }
+
+    .planet-image-caption {
+      font-size: 0.75rem;
+      color: rgba(210,220,245,0.9);
+      padding: 6px 10px 8px;
+      border-top: 1px solid rgba(255,255,255,0.16);
+    }
+
+    @media (max-width: 1180px) {
+      body { padding: 110px 12px 40px; }
+      .page-shell { grid-template-columns: minmax(0, 1fr); column-gap: 0; }
+      .side-panel { position: static; width: 100%; margin-bottom: 16px; }
+      .page-wrapper { grid-column: 1 / -1; }
+    }
+
+    @media (max-width: 820px) {
+      .notebook { padding: 20px 18px 20px 64px; }
+      .notebook::after { left: 52px; }
+      .ring-column { left: 24px; }
+      .page-body { grid-template-columns: minmax(0, 1fr); }
+      .log-block {
+        border-right: none;
+        padding-right: 0;
+        border-bottom: 1px dashed rgba(255,255,255,0.14);
+        padding-bottom: 18px;
+        margin-bottom: 12px;
+      }
+      .page-header { padding-right: 0; }
+      .tape-tag {
+        position: static;
+        margin-top: 10px;
+        align-self: flex-start;
+        max-width: 100%;
+        white-space: normal;
+      }
+      .page-title { max-width: 100%; }
+    }
+
+    @media (max-width: 520px) {
+      .notebook { padding: 18px 14px 18px 52px; border-radius: 18px; }
+      .notebook::after { left: 44px; }
+      .ring-column { left: 18px; }
+      .page-title { font-size: 1.2rem; letter-spacing: 0.12em; }
+      .tape-tag { font-size: 0.62rem; letter-spacing: 0.12em; }
+    }
+  </style>
 </head>
 <body>
-  <div class="star-noise"></div>
+  <div id="canvas-container"></div>
 
-  <div class="notebook-wrapper">
-    <div class="notebook-shadow"></div>
-    <main class="notebook" aria-label="Полевой блокнот: малые тела">
-      <div class="ring-column">
-        <div class="ring ring--accent"></div>
-        <div class="ring"></div>
-        <div class="ring"></div>
+  <div class="page-shell">
+    <!-- левая панель -->
+    <aside class="side-panel side-panel--left" aria-label="Монитор малых тел">
+      <div class="side-panel-title-main">
+        SOLARIS · МАЛЫЕ ТЕЛА
+      </div>
+      <div class="side-panel-subtitle">
+        <span>ОРБИТАЛЬНЫЙ МОНИТОР</span>
+        <span class="side-dot"></span>
       </div>
 
-      <div class="tape-tag">
-        <span class="tape-dot"></span>
-        <span>LOG 05 / SECTOR M</span>
+      <div class="notes-nav">
+        <button class="notes-nav-button" data-target="note-1">Заметка 01 · Что такое малые тела</button>
+        <button class="notes-nav-button" data-target="note-2">Заметка 02 · Астероиды</button>
+        <button class="notes-nav-button" data-target="note-3">Заметка 03 · Кометы</button>
+        <button class="notes-nav-button" data-target="note-4">Заметка 04 · Метеоры и метеориты</button>
       </div>
 
-      <header class="page-header">
-        <h1 class="page-title">Малые тела</h1>
-        <div class="page-subtitle">Кометы, астероиды и метеороиды</div>
-      </header>
-
-      <div class="page-meta">
-        <span>EXPLORER: ID-742</span>
-        <span>TRACK: SOLARIS / ATLAS</span>
-        <span>MODULE: MINOR LOG</span>
+      <div class="side-panel-lines">
+        <div class="panel-grid"></div>
+        <div class="scan-strip"></div>
+        <div class="scan-strip"></div>
+        <div class="scan-strip"></div>
       </div>
+    </aside>
 
-      <div class="page-divider"></div>
+    <!-- центральная колонка -->
+    <main class="page-wrapper">
+      <!-- ЗАМЕТКА 01 -->
+      <section class="notebook" id="note-1" aria-label="Заметка о малых телах №1">
+        <div class="ring-column">
+          <div class="ring ring--accent"></div>
+          <div class="ring"></div>
+          <div class="ring"></div>
+        </div>
 
-      <section class="page-body">
-        <section class="log-block">
-          <div class="log-label">Полевые заметки</div>
-          <div class="log-text">
-            Малые тела сохраняют первичный материал протопланетного диска и служат <em>архивами формирования</em> системы.  
-            Их орбиты пересекают пути планет, создавая как угрозу столкновений, так и ресурсы будущей добычи.  
+        <div class="tape-tag">
+          <span class="tape-dot"></span>
+          <span>ЗАМЕТКА 01 · ОБЗОР</span>
+        </div>
+
+        <header class="page-header">
+          <h1 class="page-title">Малые тела Солнечной системы</h1>
+          <div class="page-subtitle">
+            Камни, лёд и пыль — «архив» ранней Солнечной системы
           </div>
+        </header>
 
-          <ul class="log-list">
-            <li>Кометы демонстрируют активность при сближении со звездой, формируя хвосты газа и пыли.</li>
-            <li>Астероидные пояса отмечают зоны, где планета не сформировалась из-за гравитационных резонансов.</li>
-            <li>Метеорные потоки на планетах связаны с остатками кометных орбит.</li>
-          </ul>
-        </section>
+        <div class="page-meta">
+          <span>Сектор: общая картина</span>
+          <span>Особенности: пояса · орбиты · столкновения</span>
+        </div>
 
-        <aside class="sidebar-block" aria-label="Краткие данные по малым телам">
-          <div class="chip-row">
-            <span class="chip">asteroid belt</span>
-            <span class="chip">comet nuclei</span>
-            <span class="chip">meteor showers</span>
+        <div class="page-divider"></div>
+
+        <div class="page-body">
+          <article class="log-block">
+            <div class="log-label">Определение (по смыслу)</div>
+            <div class="log-text">
+              Малые тела — это многочисленные объекты, которые обращаются вокруг Солнца, но не являются планетами и их крупными спутниками.
+              В «карте распределения» чаще всего выделяют две большие зоны: пояс астероидов и пояс Койпера.
+              Их орбиты постоянно «перетираются» динамикой: резонансы, сближения и столкновения создают осколки и пыль.
+            </div>
+
+            <ul class="log-list">
+              <li>Астероиды — в основном каменные/металлические тела, часто неправильной формы.</li>
+              <li>Кометы — ледяные ядра, которые при нагреве дают кому и хвост.</li>
+              <li>Метеороиды → метеоры → метеориты: одна и та же материя, но в разных стадиях «контакта» с атмосферой.</li>
+            </ul>
+
+            <div class="log-label" style="margin-top:14px;">Зачем это изучают</div>
+            <div class="log-text">
+              Малые тела важны сразу по двум причинам: они хранят информацию о ранней эволюции системы и могут представлять риск при падениях на Землю.
+            </div>
+          </article>
+
+          <aside class="sidebar-block" aria-label="Сводка по малым телам">
+            <div class="planet-image">
+              <img src="https://dummyimage.com/600x360/050611/00d2ff&text=Малые+тела" alt="Схема пояса астероидов и пояса Койпера">
+              <div class="planet-image-caption">
+                Две главные «складские зоны»: пояс астероидов и пояс Койпера.
+              </div>
+            </div>
+
+            <div class="data-card">
+              <div class="data-title">Упрощённо</div>
+              <table class="data-table">
+                <tr><td>Где много</td><td>2 пояса</td></tr>
+                <tr><td>Материал</td><td>камень/лёд</td></tr>
+                <tr><td>Процессы</td><td>столкновения</td></tr>
+                <tr><td>Риск</td><td>падения</td></tr>
+              </table>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <div class="card-separator"></div>
+
+      <!-- ЗАМЕТКА 02 -->
+      <section class="notebook" id="note-2" aria-label="Заметка об астероидах №2">
+        <div class="ring-column">
+          <div class="ring ring--accent"></div>
+          <div class="ring"></div>
+          <div class="ring"></div>
+        </div>
+
+        <div class="tape-tag">
+          <span class="tape-dot"></span>
+          <span>ЗАМЕТКА 02 · АСТЕРОИДЫ</span>
+        </div>
+
+        <header class="page-header">
+          <h1 class="page-title">Астероиды</h1>
+          <div class="page-subtitle">
+            Каменные глыбы, обломки и «строительные блоки» планет
           </div>
+        </header>
 
-          <div class="data-card">
-            <div class="data-title">Категории</div>
-            <table class="data-table">
-              <tr>
-                <td>Астероиды</td>
-                <td>скальные / металлические</td>
-              </tr>
-              <tr>
-                <td>Кометы</td>
-                <td>ледяные ядра</td>
-              </tr>
-              <tr>
-                <td>Кентавры</td>
-                <td>между гигантами</td>
-              </tr>
-              <tr>
-                <td>Транснептун.</td>
-                <td>дальний пояс</td>
-              </tr>
-            </table>
+        <div class="page-meta">
+          <span>Сектор: пояс астероидов</span>
+          <span>Особенности: форма · состав · сближения</span>
+        </div>
+
+        <div class="page-divider"></div>
+
+        <div class="page-body">
+          <article class="log-block">
+            <div class="log-label">Полевые наблюдения</div>
+            <div class="log-text">
+              Астероиды часто имеют неправильную форму, потому что их гравитации не хватает, чтобы «собрать себя» в шар.
+              Многие астероиды — обломки после древних столкновений; поэтому встречаются семейства с похожими орбитами.
+              Отдельный класс интереса — околоземные астероиды: их орбиты могут пересекаться с земной, и тогда важны расчёты вероятности сближения.
+            </div>
+
+            <ul class="log-list">
+              <li>Главный сценарий происхождения пыли и метеороидов — разрушения и столкновения.</li>
+              <li>Сближения и резонансы могут постепенно менять орбиты и «подталкивать» тела внутрь системы.</li>
+              <li>Миссии к астероидам часто исследуют состав и структуру, чтобы понять ранние этапы формирования планет.</li>
+            </ul>
+          </article>
+
+          <aside class="sidebar-block" aria-label="Сводка по астероидам">
+            <div class="planet-image">
+              <img src="https://dummyimage.com/600x360/060815/ffd700&text=Астероиды" alt="Схема астероидов и их орбит">
+              <div class="planet-image-caption">
+                Астероиды: разнообразие орбит и форм, от монолитов до «гравитационных куч».
+              </div>
+            </div>
+
+            <div class="data-card">
+              <div class="data-title">Быстрая сводка</div>
+              <table class="data-table">
+                <tr><td>Типично</td><td>камень</td></tr>
+                <tr><td>Форма</td><td>нерегулярная</td></tr>
+                <tr><td>Где много</td><td>пояс</td></tr>
+                <tr><td>Опасность</td><td>сближения</td></tr>
+              </table>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <div class="card-separator"></div>
+
+      <!-- ЗАМЕТКА 03 -->
+      <section class="notebook" id="note-3" aria-label="Заметка о кометах №3">
+        <div class="ring-column">
+          <div class="ring ring--accent"></div>
+          <div class="ring"></div>
+          <div class="ring"></div>
+        </div>
+
+        <div class="tape-tag">
+          <span class="tape-dot"></span>
+          <span>ЗАМЕТКА 03 · КОМЕТЫ</span>
+        </div>
+
+        <header class="page-header">
+          <h1 class="page-title">Кометы</h1>
+          <div class="page-subtitle">
+            Лёд и пыль, которые «включаются» при нагреве у Солнца
           </div>
+        </header>
 
-          <a href="/" class="back-link">вернуться к карте</a>
-        </aside>
+        <div class="page-meta">
+          <span>Сектор: вытянутые орбиты</span>
+          <span>Особенности: ядро · кома · хвост</span>
+        </div>
+
+        <div class="page-divider"></div>
+
+        <div class="page-body">
+          <article class="log-block">
+            <div class="log-label">Как выглядит комета</div>
+            <div class="log-text">
+              Вдали от Солнца комета может быть почти «невидимым» ядром, но при сближении лёд начинает испаряться, и вокруг ядра появляется кома.
+              Потоки газа и пыли растягиваются в хвост, который наблюдательно выделяет комету на небе.
+              Кометы важны как источники метеорных потоков: пылевой след на орбите остаётся даже после прохода ядра.
+            </div>
+
+            <ul class="log-list">
+              <li>Ядро: твёрдая смесь льдов и пыли.</li>
+              <li>Кома: газопылевая «атмосфера» вокруг ядра.</li>
+              <li>Хвост: вытянутый шлейф, заметный при приближении к Солнцу.</li>
+            </ul>
+
+            <div class="log-label" style="margin-top:14px;">Инженерный факт</div>
+            <div class="log-text">
+              При пролётах рядом с кометой аппарату важно учитывать пылевую среду: даже мелкие частицы на скорости могут быть опасны.
+            </div>
+          </article>
+
+          <aside class="sidebar-block" aria-label="Сводка по кометам">
+            <div class="planet-image">
+              <img src="https://dummyimage.com/600x360/050b20/00d2ff&text=Комета" alt="Схема кометы: ядро, кома и хвост">
+              <div class="planet-image-caption">
+                Комета: ядро + кома + хвост — «активная» стадия около Солнца.
+              </div>
+            </div>
+
+            <div class="data-card">
+              <div class="data-title">Комета в трёх словах</div>
+              <table class="data-table">
+                <tr><td>Состав</td><td>лёд + пыль</td></tr>
+                <tr><td>Активность</td><td>у Солнца</td></tr>
+                <tr><td>Признак</td><td>кома/хвост</td></tr>
+                <tr><td>След</td><td>пылевой поток</td></tr>
+              </table>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <div class="card-separator"></div>
+
+      <!-- ЗАМЕТКА 04 -->
+      <section class="notebook" id="note-4" aria-label="Заметка о метеорах №4">
+        <div class="ring-column">
+          <div class="ring ring--accent"></div>
+          <div class="ring"></div>
+          <div class="ring"></div>
+        </div>
+
+        <div class="tape-tag">
+          <span class="tape-dot"></span>
+          <span>ЗАМЕТКА 04 · МЕТЕОРЫ</span>
+        </div>
+
+        <header class="page-header">
+          <h1 class="page-title">Метеороиды, метеоры и метеориты</h1>
+          <div class="page-subtitle">
+            Один объект — три названия, в зависимости от того, где он находится
+          </div>
+        </header>
+
+        <div class="page-meta">
+          <span>Сектор: атмосфера и падения</span>
+          <span>Особенности: свечение · фрагментация · находки</span>
+        </div>
+
+        <div class="page-divider"></div>
+
+        <div class="page-body">
+          <article class="log-block">
+            <div class="log-label">Путаница терминов</div>
+            <div class="log-text">
+              Метеороид — это небольшой кусок камня/металла/льда, который летит в космосе по орбите вокруг Солнца.
+              Метеор — это явление свечения, когда тело входит в атмосферу и нагревается, оставляя яркий след.
+              Метеорит — это то, что уцелело после пролёта через атмосферу и упало на поверхность.
+            </div>
+
+            <ul class="log-list">
+              <li>Метеорные потоки часто повторяются ежегодно: Земля пересекает «пылевые дорожки» на орбитах.</li>
+              <li>Крупные входы могут сопровождаться вспышками и распадом на фрагменты.</li>
+              <li>Метеориты — ценный материал для лабораторий: можно изучать состав, возраст и историю вещества.</li>
+            </ul>
+
+            <div class="log-label" style="margin-top:14px;">Практика наблюдений</div>
+            <div class="log-text">
+              Для поиска метеоритов важны траектория и район падения: чем точнее восстановлен путь, тем выше шанс найти фрагменты.
+            </div>
+          </article>
+
+          <aside class="sidebar-block" aria-label="Сводка по метеоритам">
+            <div class="planet-image">
+              <img src="https://dummyimage.com/600x360/120814/bc13fe&text=Метеор+и+метеорит" alt="Схема: метеороид, метеор, метеорит">
+              <div class="planet-image-caption">
+                «В космосе — метеороид; в атмосфере — метеор; на Земле — метеорит».
+              </div>
+            </div>
+
+            <div class="data-card">
+              <div class="data-title">Шпаргалка</div>
+              <table class="data-table">
+                <tr><td>До входа</td><td>метеороид</td></tr>
+                <tr><td>Вход</td><td>метеор</td></tr>
+                <tr><td>После</td><td>метеорит</td></tr>
+                <tr><td>Источник</td><td>кометы/астероиды</td></tr>
+              </table>
+            </div>
+          </aside>
+        </div>
       </section>
     </main>
+
+    <!-- правая панель -->
+    <aside class="side-panel side-panel--right" aria-label="Проверка знаний">
+      <div class="side-panel-title-main">
+        SOLARIS · МАЛЫЕ ТЕЛА
+      </div>
+      <div class="side-panel-subtitle">
+        <span>ПРОВЕРКА ЗНАНИЙ</span>
+        <span class="side-dot"></span>
+      </div>
+
+      <div class="quiz-body">
+        <div>
+          <div class="quiz-question">1. Как называется явление свечения при входе тела в атмосферу?</div>
+          <select id="q1" class="quiz-select">
+            <option value="">Выбери ответ</option>
+            <option value="метеороид">Метеороид</option>
+            <option value="метеор">Метеор</option>
+            <option value="метеорит">Метеорит</option>
+          </select>
+        </div>
+
+        <div>
+          <div class="quiz-question">2. Где сосредоточено много орбит малых тел в Солнечной системе?</div>
+          <select id="q2" class="quiz-select">
+            <option value="">Выбери ответ</option>
+            <option value="пояса">В поясе астероидов и поясе Койпера</option>
+            <option value="солнце">Внутри Солнца</option>
+            <option value="луна">Только около Луны</option>
+          </select>
+        </div>
+
+        <div>
+          <div class="quiz-question">3. Что появляется у кометы при сближении с Солнцем?</div>
+          <select id="q3" class="quiz-select">
+            <option value="">Выбери ответ</option>
+            <option value="кольца">Кольца</option>
+            <option value="кома">Кома и хвост</option>
+            <option value="магнитосфера">Магнитосфера как у Земли</option>
+          </select>
+        </div>
+
+        <div class="quiz-buttons">
+          <button class="quiz-btn" id="quiz-check">Проверить</button>
+          <button class="quiz-btn" id="quiz-reset">Сбросить</button>
+        </div>
+
+        <div id="quiz-status" class="quiz-status">
+          Результат: — / 3
+        </div>
+      </div>
+    </aside>
   </div>
 
   <script src="/menu.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+  <script>
+    // звёздный фон: только Points
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    document.getElementById('canvas-container').appendChild(renderer.domElement);
+
+    const starsGeometry = new THREE.BufferGeometry();
+    const starsCount = 5000;
+    const posArray = new Float32Array(starsCount * 3);
+    for (let i = 0; i < starsCount * 3; i++) posArray[i] = (Math.random() - 0.5) * 600;
+    starsGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+
+    const starsMaterial = new THREE.PointsMaterial({ size: 0.15, color: 0xffffff, transparent: true, opacity: 0.8 });
+    const starsMesh = new THREE.Points(starsGeometry, starsMaterial);
+    scene.add(starsMesh);
+
+    camera.position.set(0, 0, 40);
+    camera.lookAt(0, 0, 0);
+
+    function animate() {
+      requestAnimationFrame(animate);
+      starsMesh.rotation.y += 0.0002;
+      renderer.render(scene, camera);
+    }
+    animate();
+
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    // Квиз
+    (function() {
+      const q1 = document.getElementById('q1');
+      const q2 = document.getElementById('q2');
+      const q3 = document.getElementById('q3');
+      const status = document.getElementById('quiz-status');
+      const btnCheck = document.getElementById('quiz-check');
+      const btnReset = document.getElementById('quiz-reset');
+
+      function setStatus(text, cls) {
+        status.textContent = text;
+        status.classList.remove('quiz-status--bad', 'quiz-status--mid', 'quiz-status--good');
+        if (cls) status.classList.add(cls);
+      }
+
+      btnCheck.addEventListener('click', () => {
+        let score = 0;
+        if (q1.value === 'метеор') score++;
+        if (q2.value === 'пояса') score++;
+        if (q3.value === 'кома') score++;
+
+        if (score === 0) setStatus('Результат: 0 / 3', 'quiz-status--bad');
+        else if (score === 3) setStatus('Результат: 3 / 3', 'quiz-status--good');
+        else setStatus(`Результат: ${score} / 3`, 'quiz-status--mid');
+      });
+
+      btnReset.addEventListener('click', () => {
+        q1.value = '';
+        q2.value = '';
+        q3.value = '';
+        setStatus('Результат: — / 3', '');
+      });
+    })();
+
+    // скролл по заметкам — с точным выравниванием по верхней линии боковых панелей
+    (function() {
+      const buttons = document.querySelectorAll('.notes-nav-button');
+      const ALIGN_TOP = 120;
+
+      function scrollToAligned(el) {
+        const y = el.getBoundingClientRect().top + window.scrollY - ALIGN_TOP;
+        window.scrollTo({ top: y, behavior: 'smooth' });
+      }
+
+      buttons.forEach(btn => {
+        btn.addEventListener('click', () => {
+          const id = btn.getAttribute('data-target');
+          const target = document.getElementById(id);
+          if (!target) return;
+          scrollToAligned(target);
+        });
+      });
+    })();
+  </script>
 </body>
 </html>

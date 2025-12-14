@@ -3,89 +3,1164 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>SOLARIS Atlas | Звезды</title>
-  <!-- тот же <style>, что и в planets/index.html, без изменений -->
+  <title>SOLARIS Атлас | Звёзды</title>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@300;600&display=swap');
+
+    :root {
+      --color-blue: #00d2ff;
+      --color-purple: #bc13fe;
+      --color-sun: #ffd700;
+      --bg-dark: #050505;
+      --glass: rgba(255, 255, 255, 0.05);
+      --tape-reserve: 150px;
+    }
+
+    * { box-sizing: border-box; }
+
+    html {
+      scroll-behavior: smooth;
+      scroll-padding-top: 110px;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg-dark);
+      color: #f5f5f5;
+      font-family: 'Exo 2', sans-serif;
+      padding: 120px 20px 40px;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    #canvas-container {
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      pointer-events: none;
+    }
+
+    #space-layer {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+
+    .page-shell {
+      position: relative;
+      max-width: 1400px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 260px minmax(0, 1.2fr) 260px;
+      column-gap: 40px;
+    }
+
+    .side-panel {
+      position: fixed;
+      top: 120px;
+      width: 260px;
+      border-radius: 18px;
+      border: 1px solid rgba(0,210,255,0.25);
+      background: radial-gradient(circle at top, rgba(0,210,255,0.15), rgba(3,8,16,0.92));
+      box-shadow:
+        0 0 22px rgba(0,210,255,0.4),
+        inset 0 0 18px rgba(0,0,0,0.9);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      padding: 12px 12px 14px;
+      opacity: 0.95;
+      z-index: 5;
+    }
+
+    .side-panel--left {
+      left: calc(50% - 1400px / 2);
+      margin-left: 20px;
+    }
+
+    .side-panel--right {
+      right: calc(50% - 1400px / 2);
+      margin-right: 20px;
+      border-color: rgba(188,19,254,0.35);
+      box-shadow:
+        0 0 22px rgba(188,19,254,0.5),
+        inset 0 0 18px rgba(0,0,0,0.9);
+      background: radial-gradient(circle at top, rgba(188,19,254,0.2), rgba(5,6,18,0.96));
+    }
+
+    @media (max-width: 1400px) {
+      .side-panel--left { left: 20px; margin-left: 0; }
+      .side-panel--right { right: 20px; margin-right: 0; }
+    }
+
+    .side-panel-title-main {
+      font-size: 0.7rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: rgba(180,210,255,0.9);
+      margin-bottom: 8px;
+    }
+
+    .side-panel-subtitle {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 0.73rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: rgba(230,240,255,0.9);
+      padding-bottom: 6px;
+      border-bottom: 1px solid rgba(255,255,255,0.18);
+      margin-bottom: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .side-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: var(--color-sun);
+      box-shadow: 0 0 12px rgba(255,215,0,0.9);
+    }
+
+    .panel-grid {
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(0, 255, 255, 0.17) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 255, 255, 0.11) 1px, transparent 1px);
+      background-size: 18px 18px;
+      opacity: 0.35;
+      mix-blend-mode: screen;
+      pointer-events: none;
+    }
+
+    .side-panel-lines {
+      position: relative;
+      flex: 1;
+      overflow: hidden;
+      margin-top: 6px;
+      border-radius: 10px;
+    }
+
+    .scan-strip {
+      position: absolute;
+      left: 0;
+      right: 0;
+      height: 60px;
+      background: linear-gradient(
+        to bottom,
+        rgba(0,210,255,0.0),
+        rgba(0,210,255,0.2),
+        rgba(0,210,255,0.0)
+      );
+      opacity: 0.4;
+      animation: panelScan 6s linear infinite;
+    }
+
+    .scan-strip:nth-child(2) { animation-delay: -2s; }
+    .scan-strip:nth-child(3) { animation-delay: -4s; }
+
+    @keyframes panelScan {
+      0%   { transform: translateY(-80px); }
+      100% { transform: translateY(220%); }
+    }
+
+    .notes-nav {
+      position: relative;
+      z-index: 1;
+      margin-top: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      font-size: 0.8rem;
+    }
+
+    .notes-nav-button {
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.2);
+      background: rgba(3,8,16,0.9);
+      color: #e5f0ff;
+      font-family: 'Exo 2', sans-serif;
+      font-size: 0.8rem;
+      padding: 6px 8px;
+      text-align: left;
+      cursor: pointer;
+      transition: 0.2s;
+      display: block;
+      width: 100%;
+      white-space: normal;
+      line-height: 1.4;
+    }
+
+    .notes-nav-button:hover {
+      border-color: var(--color-blue);
+      box-shadow: 0 0 10px rgba(0,210,255,0.6);
+      color: var(--color-blue);
+    }
+
+    .quiz-body {
+      position: relative;
+      z-index: 1;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      font-size: 0.8rem;
+      color: rgba(225,235,255,0.95);
+      margin-top: 8px;
+    }
+
+    .quiz-question {
+      margin-bottom: 4px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+    }
+
+    .quiz-select {
+      width: 100%;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.25);
+      background: rgba(5,5,12,0.9);
+      color: #fff;
+      font-family: inherit;
+      font-size: 0.8rem;
+      padding: 6px 8px;
+      outline: none;
+    }
+
+    .quiz-select option { background: #05050a; }
+
+    .quiz-buttons {
+      display: flex;
+      gap: 8px;
+      margin-top: 6px;
+    }
+
+    .quiz-btn {
+      flex: 1;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.35);
+      background: transparent;
+      color: #fff;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 0.7rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      padding: 6px 6px;
+      cursor: pointer;
+      transition: 0.25s;
+    }
+
+    .quiz-btn:hover {
+      border-color: var(--color-blue);
+      box-shadow: 0 0 12px rgba(0,210,255,0.5);
+      color: var(--color-blue);
+    }
+
+    .quiz-status {
+      margin-top: 8px;
+      font-size: 0.75rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      text-align: center;
+      padding: 4px 6px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.2);
+      background: rgba(0,0,0,0.6);
+    }
+
+    .quiz-status--bad {
+      color: #ff5c5c;
+      border-color: rgba(255,92,92,0.7);
+      box-shadow: 0 0 12px rgba(255,92,92,0.6);
+    }
+
+    .quiz-status--mid {
+      color: #ffd86b;
+      border-color: rgba(255,216,107,0.7);
+      box-shadow: 0 0 12px rgba(255,216,107,0.5);
+    }
+
+    .quiz-status--good {
+      color: #7dff9c;
+      border-color: rgba(125,255,156,0.7);
+      box-shadow: 0 0 12px rgba(125,255,156,0.6);
+    }
+
+    .page-wrapper {
+      position: relative;
+      z-index: 1;
+      grid-column: 2 / 3;
+      display: flex;
+      flex-direction: column;
+      gap: 40px;
+    }
+
+    .card-separator {
+      height: 1px;
+      width: 100%;
+      background: radial-gradient(circle, rgba(0,210,255,0.4), transparent 70%);
+      opacity: 0.5;
+    }
+
+    .notebook {
+      position: relative;
+      background: rgba(10, 10, 16, 0.9);
+      backdrop-filter: blur(18px);
+      border-radius: 24px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow:
+        0 32px 80px rgba(0, 0, 0, 0.9),
+        0 0 0 1px rgba(0, 0, 0, 0.8);
+      padding: 26px 28px 26px 80px;
+      overflow: hidden;
+    }
+
+    .notebook::before { content: none; }
+
+    .notebook::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 64px;
+      width: 2px;
+      height: 100%;
+      background: linear-gradient(
+        to bottom,
+        rgba(0,210,255,0.5),
+        rgba(255,255,255,0.1),
+        rgba(188,19,254,0.5)
+      );
+      box-shadow: 0 0 12px rgba(0,210,255,0.6);
+      opacity: 0.9;
+    }
+
+    .ring-column {
+      position: absolute;
+      top: 18px;
+      left: 32px;
+      width: 22px;
+      height: calc(100% - 36px);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      align-items: center;
+      pointer-events: none;
+    }
+
+    .ring {
+      width: 14px;
+      height: 14px;
+      border-radius: 999px;
+      border: 2px solid rgba(120, 200, 255, 0.6);
+      box-shadow:
+        0 0 8px rgba(0,210,255,0.9),
+        inset 0 0 4px rgba(0,0,0,0.8);
+      background: radial-gradient(circle, rgba(0,210,255,0.9) 0, transparent 60%);
+    }
+
+    .ring--accent {
+      border-color: rgba(255, 215, 0, 0.9);
+      box-shadow:
+        0 0 10px rgba(255,215,0,1),
+        inset 0 0 4px rgba(0,0,0,0.9);
+      background: radial-gradient(circle, rgba(255,215,0,1) 0, transparent 60%);
+    }
+
+    .tape-tag {
+      position: absolute;
+      top: 22px;
+      right: 32px;
+      padding: 4px 14px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.35);
+      background: linear-gradient(120deg, rgba(0,0,0,0.75), rgba(40,40,60,0.9));
+      box-shadow:
+        0 0 16px rgba(0,210,255,0.6),
+        inset 0 0 4px rgba(0,0,0,0.8);
+      font-family: 'Orbitron', sans-serif;
+      font-size: 0.7rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.9);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      z-index: 2;
+      max-width: 45%;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .tape-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 999px;
+      background: var(--color-sun);
+      box-shadow: 0 0 10px rgba(255,215,0,0.9);
+      flex-shrink: 0;
+    }
+
+    .page-header {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-bottom: 20px;
+      padding-right: var(--tape-reserve);
+    }
+
+    .page-title {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.4rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      margin: 0;
+      background: linear-gradient(135deg, #ffffff, var(--color-blue));
+      background-clip: text;
+      color: transparent;
+      -webkit-text-fill-color: transparent;
+      text-shadow: 0 0 18px rgba(0,210,255,0.3);
+      white-space: normal;
+      word-break: break-word;
+      line-height: 1.3;
+      max-width: calc(100% - (var(--tape-reserve) + 10px));
+    }
+
+    .page-subtitle {
+      font-size: 0.9rem;
+      text-transform: none;
+      letter-spacing: 0.06em;
+      color: rgba(200, 200, 220, 0.9);
+    }
+
+    .page-meta {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px 24px;
+      font-size: 0.75rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: rgba(180, 200, 220, 0.8);
+      margin-bottom: 12px;
+    }
+
+    .page-meta span {
+      border-left: 1px solid rgba(255,255,255,0.18);
+      padding-left: 10px;
+      white-space: normal;
+    }
+
+    .page-divider {
+      position: relative;
+      z-index: 2;
+      height: 1px;
+      margin-bottom: 18px;
+      background: linear-gradient(
+        to right,
+        rgba(0,210,255,0.0),
+        rgba(0,210,255,0.9),
+        rgba(188,19,254,0.7),
+        rgba(255,255,255,0.1)
+      );
+      box-shadow: 0 0 22px rgba(0,210,255,0.4);
+      opacity: 0.9;
+    }
+
+    .page-body {
+      position: relative;
+      z-index: 2;
+      display: grid;
+      grid-template-columns: minmax(0, 1.5fr) minmax(0, 1.1fr);
+      gap: 24px;
+    }
+
+    .log-block {
+      padding-right: 10px;
+      border-right: 1px dashed rgba(255,255,255,0.14);
+    }
+
+    .log-label {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 0.78rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: rgba(0,210,255,0.9);
+      margin-bottom: 6px;
+    }
+
+    .log-text {
+      font-size: 0.95rem;
+      line-height: 1.6;
+      color: rgba(235, 238, 250, 0.95);
+    }
+
+    .log-list {
+      margin: 12px 0 0;
+      padding-left: 16px;
+      list-style: none;
+      border-left: 1px solid rgba(255,255,255,0.16);
+    }
+
+    .log-list li {
+      font-size: 0.9rem;
+      color: rgba(210, 220, 245, 0.95);
+      margin-bottom: 6px;
+      position: relative;
+      padding-left: 12px;
+    }
+
+    .log-list li::before {
+      content: '◆';
+      position: absolute;
+      left: -3px;
+      top: 0;
+      font-size: 0.5rem;
+      color: var(--color-blue);
+      text-shadow: 0 0 10px rgba(0,210,255,0.7);
+    }
+
+    .sidebar-block {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .data-card {
+      border-radius: 16px;
+      padding: 10px 14px;
+      background: radial-gradient(circle at top left, rgba(0,210,255,0.22), rgba(5,5,12,0.96));
+      border: 1px solid rgba(255,255,255,0.16);
+      box-shadow: 0 16px 30px rgba(0,0,0,0.9);
+      font-size: 0.83rem;
+      color: rgba(220,230,255,0.95);
+    }
+
+    .data-title {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 0.8rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: rgba(0,210,255,0.95);
+      margin-bottom: 6px;
+    }
+
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      border-spacing: 0;
+    }
+
+    .data-table td {
+      padding: 4px 0;
+      font-size: 0.8rem;
+    }
+
+    .data-table td:first-child {
+      color: rgba(180,200,230,0.85);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      font-size: 0.72rem;
+    }
+
+    .data-table td:last-child {
+      text-align: right;
+      color: rgba(240,245,255,0.98);
+      font-family: 'Orbitron', sans-serif;
+      font-size: 0.8rem;
+    }
+
+    .planet-image {
+      width: 100%;
+      border-radius: 14px;
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,0.22);
+      box-shadow: 0 0 22px rgba(0, 210, 255, 0.6);
+      background: radial-gradient(circle at top, rgba(0,210,255,0.25), rgba(3,3,10,0.98));
+    }
+
+    .planet-image img {
+      display: block;
+      width: 100%;
+      height: auto;
+      object-fit: cover;
+      opacity: 0.95;
+    }
+
+    .planet-image-caption {
+      font-size: 0.75rem;
+      color: rgba(210,220,245,0.9);
+      padding: 6px 10px 8px;
+      border-top: 1px solid rgba(255,255,255,0.16);
+    }
+
+    @media (max-width: 1180px) {
+      body { padding: 110px 12px 40px; }
+      .page-shell { grid-template-columns: minmax(0, 1fr); column-gap: 0; }
+      .side-panel { position: static; width: 100%; margin-bottom: 16px; }
+      .page-wrapper { grid-column: 1 / -1; }
+    }
+
+    @media (max-width: 820px) {
+      .notebook { padding: 20px 18px 20px 64px; }
+      .notebook::after { left: 52px; }
+      .ring-column { left: 24px; }
+      .page-body { grid-template-columns: minmax(0, 1fr); }
+      .log-block {
+        border-right: none;
+        padding-right: 0;
+        border-bottom: 1px dashed rgba(255,255,255,0.14);
+        padding-bottom: 18px;
+        margin-bottom: 12px;
+      }
+      .page-header { padding-right: 0; }
+      .tape-tag {
+        position: static;
+        margin-top: 10px;
+        align-self: flex-start;
+        max-width: 100%;
+        white-space: normal;
+      }
+      .page-title { max-width: 100%; }
+    }
+
+    @media (max-width: 520px) {
+      .notebook { padding: 18px 14px 18px 52px; border-radius: 18px; }
+      .notebook::after { left: 44px; }
+      .ring-column { left: 18px; }
+      .page-title { font-size: 1.2rem; letter-spacing: 0.12em; }
+      .tape-tag { font-size: 0.62rem; letter-spacing: 0.12em; }
+    }
+  </style>
 </head>
 <body>
-  <div class="star-noise"></div>
+  <div id="canvas-container"></div>
 
-  <div class="notebook-wrapper">
-    <div class="notebook-shadow"></div>
-    <main class="notebook" aria-label="Полевой блокнот: звезды">
-      <div class="ring-column">
-        <div class="ring ring--accent"></div>
-        <div class="ring"></div>
-        <div class="ring"></div>
+  <div class="page-shell">
+    <!-- левая панель -->
+    <aside class="side-panel side-panel--left" aria-label="Звёздный монитор">
+      <div class="side-panel-title-main">
+        SOLARIS · ЗВЁЗДЫ
+      </div>
+      <div class="side-panel-subtitle">
+        <span>ЗВЁЗДНЫЙ МОНИТОР</span>
+        <span class="side-dot"></span>
       </div>
 
-      <div class="tape-tag">
-        <span class="tape-dot"></span>
-        <span>LOG 02 / SECTOR S</span>
+      <div class="notes-nav">
+        <button class="notes-nav-button" data-target="note-1">Заметка 01 · Общие сведения</button>
+        <button class="notes-nav-button" data-target="note-2">Заметка 02 · Типы (спектры)</button>
+        <button class="notes-nav-button" data-target="note-3">Заметка 03 · Эволюция</button>
+        <button class="notes-nav-button" data-target="note-4">Заметка 04 · Конечные стадии</button>
       </div>
 
-      <header class="page-header">
-        <h1 class="page-title">Звезды</h1>
-        <div class="page-subtitle">Эволюция светил и их классы</div>
-      </header>
-
-      <div class="page-meta">
-        <span>EXPLORER: ID-742</span>
-        <span>TRACK: SOLARIS / ATLAS</span>
-        <span>MODULE: STELLAR LOG</span>
+      <div class="side-panel-lines">
+        <div class="panel-grid"></div>
+        <div class="scan-strip"></div>
+        <div class="scan-strip"></div>
+        <div class="scan-strip"></div>
       </div>
+    </aside>
 
-      <div class="page-divider"></div>
+    <!-- центральная колонка -->
+    <main class="page-wrapper">
+      <!-- ЗАМЕТКА 01 -->
+      <section class="notebook" id="note-1" aria-label="Заметка о звёздах №1">
+        <div class="ring-column">
+          <div class="ring ring--accent"></div>
+          <div class="ring"></div>
+          <div class="ring"></div>
+        </div>
 
-      <section class="page-body">
-        <section class="log-block">
-          <div class="log-label">Полевые заметки</div>
-          <div class="log-text">
-            Звезды рождаются в плотных облаках газа, проходят стадии <em>главной последовательности</em> и завершают жизнь как белые карлики, нейтронные звезды или сверхновые остатки.  
-            Цвет и яркость светила задают энергетический режим его планетной системы.  
+        <div class="tape-tag">
+          <span class="tape-dot"></span>
+          <span>ЗАМЕТКА 01 · ЗВЁЗДЫ</span>
+        </div>
+
+        <header class="page-header">
+          <h1 class="page-title">Звёзды · общие сведения</h1>
+          <div class="page-subtitle">
+            Что такое звезда, как её описывают и почему важна диаграмма HR
           </div>
+        </header>
 
-          <ul class="log-list">
-            <li>Спектральный класс отражает температуру и цвет звезды, от холодных красных до горячих голубых гигантов.</li>
-            <li>Стабильность светимости определяет шансы на устойчивую зону обитаемости.</li>
-            <li>Массивные звезды живут меньше, но насыщают пространство тяжёлыми элементами после взрыва.</li>
-          </ul>
-        </section>
+        <div class="page-meta">
+          <span>Сектор: базовые понятия</span>
+          <span>Особенности: спектр, температура, светимость</span>
+        </div>
 
-        <aside class="sidebar-block" aria-label="Краткие данные по звездам">
-          <div class="chip-row">
-            <span class="chip">stellar evolution</span>
-            <span class="chip">spectral classes</span>
-            <span class="chip">main sequence</span>
+        <div class="page-divider"></div>
+
+        <div class="page-body">
+          <article class="log-block">
+            <div class="log-label">Краткое определение</div>
+            <div class="log-text">
+              Звезда — это самосветящееся небесное тело, которое излучает энергию благодаря термоядерным реакциям в недрах.
+              Главные «паспортные» параметры звезды — масса, температура поверхности, светимость и химический состав.
+              В астрономии часто используют диаграмму Герцшпрунга—Рассела (HR), где сравнивают светимость и температуру (или спектральный класс).
+            </div>
+
+            <ul class="log-list">
+              <li>Цвет звезды связан с её температурой: от голубых (горячих) до красных (холодных).</li>
+              <li>Звёзды большую часть жизни проводят на главной последовательности, пока в ядре идёт синтез водорода в гелий.</li>
+              <li>Наблюдаемый спектр и линии поглощения помогают определить тип, температуру и класс светимости.</li>
+            </ul>
+
+            <div class="log-label" style="margin-top:14px;">Зачем нужна классификация</div>
+            <div class="log-text">
+              Классификация помогает сравнивать звёзды между собой и понимать их эволюционный этап: карлики, гиганты и сверхгиганты
+              отличаются не только размером, но и светимостью при похожей температуре.
+            </div>
+          </article>
+
+          <aside class="sidebar-block" aria-label="Сводка по звёздным параметрам">
+            <div class="planet-image">
+              <img src="https://dummyimage.com/600x360/050611/00d2ff&text=Диаграмма+HR" alt="Схематичная диаграмма Герцшпрунга—Рассела">
+              <div class="planet-image-caption">
+                HR-диаграмма: главная последовательность, гиганты и область белых карликов.
+              </div>
+            </div>
+
+            <div class="data-card">
+              <div class="data-title">Быстрая сводка</div>
+              <table class="data-table">
+                <tr>
+                  <td>Ключевой фактор</td>
+                  <td>масса</td>
+                </tr>
+                <tr>
+                  <td>Параметры</td>
+                  <td>T, L, спектр</td>
+                </tr>
+                <tr>
+                  <td>Где «живут»</td>
+                  <td>главная послед.</td>
+                </tr>
+                <tr>
+                  <td>Переходы</td>
+                  <td>гигант → финал</td>
+                </tr>
+              </table>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <div class="card-separator"></div>
+
+      <!-- ЗАМЕТКА 02 -->
+      <section class="notebook" id="note-2" aria-label="Заметка о звёздах №2">
+        <div class="ring-column">
+          <div class="ring ring--accent"></div>
+          <div class="ring"></div>
+          <div class="ring"></div>
+        </div>
+
+        <div class="tape-tag">
+          <span class="tape-dot"></span>
+          <span>ЗАМЕТКА 02 · ТИПЫ</span>
+        </div>
+
+        <header class="page-header">
+          <h1 class="page-title">Спектральные классы</h1>
+          <div class="page-subtitle">
+            O–B–A–F–G–K–M и что эти буквы говорят о звезде
           </div>
+        </header>
 
-          <div class="data-card">
-            <div class="data-title">Локальные параметры</div>
-            <table class="data-table">
-              <tr>
-                <td>Класс звезды</td>
-                <td>G-тип</td>
-              </tr>
-              <tr>
-                <td>Возраст</td>
-                <td>~4.6 Грд</td>
-              </tr>
-              <tr>
-                <td>Металличность</td>
-                <td>умеренная</td>
-              </tr>
-              <tr>
-                <td>Стабильность</td>
-                <td>высокая</td>
-              </tr>
-            </table>
+        <div class="page-meta">
+          <span>Сектор: спектры и температура</span>
+          <span>Особенности: цвет, линии, диапазоны</span>
+        </div>
+
+        <div class="page-divider"></div>
+
+        <div class="page-body">
+          <article class="log-block">
+            <div class="log-label">Как читать тип</div>
+            <div class="log-text">
+              Спектральный класс — это шкала, которая группирует звёзды по температуре поверхности и характеру спектральных линий.
+              В упрощённом виде: O — самые горячие и голубые, M — самые холодные и красные; Солнце относится к классу G.
+              Дополнительно используют подклассы (например, G2) и классы светимости, чтобы различать карликов и гигантов при похожей температуре.
+            </div>
+
+            <ul class="log-list">
+              <li>O, B: очень горячие, яркие, короткоживущие.</li>
+              <li>A, F, G: «середина» шкалы; G — жёлтые звёзды вроде Солнца.</li>
+              <li>K, M: более холодные; среди них много маломассивных красных карликов.</li>
+            </ul>
+
+            <div class="log-label" style="margin-top:14px;">Полевой лайфхак</div>
+            <div class="log-text">
+              Если известны цвет и спектр, можно прикинуть температуру, а по положению на HR‑диаграмме — оценить светимость и этап эволюции.
+            </div>
+          </article>
+
+          <aside class="sidebar-block" aria-label="Изображение и сводка спектральных классов">
+            <div class="planet-image">
+              <img src="https://dummyimage.com/600x360/060815/ffd700&text=OBAFGKM" alt="Схема спектральных классов OBAFGKM">
+              <div class="planet-image-caption">
+                Последовательность OBAFGKM: от горячих голубых к холодным красным.
+              </div>
+            </div>
+
+            <div class="data-card">
+              <div class="data-title">Ориентиры (очень грубо)</div>
+              <table class="data-table">
+                <tr>
+                  <td>Горячие</td>
+                  <td>O, B</td>
+                </tr>
+                <tr>
+                  <td>Средние</td>
+                  <td>A–G</td>
+                </tr>
+                <tr>
+                  <td>Холодные</td>
+                  <td>K, M</td>
+                </tr>
+                <tr>
+                  <td>Эталон</td>
+                  <td>Солнце: G</td>
+                </tr>
+              </table>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <div class="card-separator"></div>
+
+      <!-- ЗАМЕТКА 03 -->
+      <section class="notebook" id="note-3" aria-label="Заметка о звёздах №3">
+        <div class="ring-column">
+          <div class="ring ring--accent"></div>
+          <div class="ring"></div>
+          <div class="ring"></div>
+        </div>
+
+        <div class="tape-tag">
+          <span class="tape-dot"></span>
+          <span>ЗАМЕТКА 03 · ЭВОЛЮЦИЯ</span>
+        </div>
+
+        <header class="page-header">
+          <h1 class="page-title">Эволюция звезды</h1>
+          <div class="page-subtitle">
+            От протозвезды до гиганта: что меняется со временем
           </div>
+        </header>
 
-          <a href="/" class="back-link">вернуться к карте</a>
-        </aside>
+        <div class="page-meta">
+          <span>Сектор: жизненный цикл</span>
+          <span>Особенности: топливо, давление, баланс</span>
+        </div>
+
+        <div class="page-divider"></div>
+
+        <div class="page-body">
+          <article class="log-block">
+            <div class="log-label">Полевые заметки</div>
+            <div class="log-text">
+              Жизнь звезды — это борьба гравитации (сжать) и давления излучения/плазмы (раздуть).
+              На главной последовательности равновесие поддерживает термоядерный синтез водорода в ядре.
+              Когда водород в центре исчерпывается, структура перестраивается: ядро сжимается, оболочки разогреваются, и звезда уходит с главной последовательности.
+            </div>
+
+            <ul class="log-list">
+              <li>Рождение: газопылевое облако → протозвезда → запуск реакций.</li>
+              <li>Долгая фаза: главная последовательность (стабильный синтез H).</li>
+              <li>Перестройка: красный гигант/сверхгигант (в зависимости от массы).</li>
+            </ul>
+
+            <div class="log-label" style="margin-top:14px;">Ключевая переменная</div>
+            <div class="log-text">
+              Масса определяет почти всё: температуру, светимость, скорость «расхода топлива» и итоговый финал звезды.
+            </div>
+          </article>
+
+          <aside class="sidebar-block" aria-label="Изображение и сводка эволюции">
+            <div class="planet-image">
+              <img src="https://dummyimage.com/600x360/050b20/00d2ff&text=Жизненный+цикл" alt="Схема жизненного цикла звезды">
+              <div class="planet-image-caption">
+                Упрощённая цепочка стадий: формирование → главная последовательность → гигант → остаток.
+              </div>
+            </div>
+
+            <div class="data-card">
+              <div class="data-title">Триггеры переходов</div>
+              <table class="data-table">
+                <tr>
+                  <td>Старт</td>
+                  <td>коллапс облака</td>
+                </tr>
+                <tr>
+                  <td>Стабильность</td>
+                  <td>синтез H</td>
+                </tr>
+                <tr>
+                  <td>Сдвиг</td>
+                  <td>H исчерпан</td>
+                </tr>
+                <tr>
+                  <td>Далее</td>
+                  <td>зависит от M</td>
+                </tr>
+              </table>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <div class="card-separator"></div>
+
+      <!-- ЗАМЕТКА 04 -->
+      <section class="notebook" id="note-4" aria-label="Заметка о звёздах №4">
+        <div class="ring-column">
+          <div class="ring ring--accent"></div>
+          <div class="ring"></div>
+          <div class="ring"></div>
+        </div>
+
+        <div class="tape-tag">
+          <span class="tape-dot"></span>
+          <span>ЗАМЕТКА 04 · ФИНАЛЫ</span>
+        </div>
+
+        <header class="page-header">
+          <h1 class="page-title">Конечные стадии звёзд</h1>
+          <div class="page-subtitle">
+            Белые карлики, нейтронные звёзды и чёрные дыры — кто во что превращается
+          </div>
+        </header>
+
+        <div class="page-meta">
+          <span>Сектор: остатки и взрывы</span>
+          <span>Особенности: масса решает исход</span>
+        </div>
+
+        <div class="page-divider"></div>
+
+        <div class="page-body">
+          <article class="log-block">
+            <div class="log-label">Итог зависит от массы</div>
+            <div class="log-text">
+              Для звёзд малой и средней массы типичен сценарий: расширение до красного гиганта, сброс оболочки и формирование компактного остатка — белого карлика.
+              Для массивных звёзд финал драматичнее: коллапс ядра может привести к вспышке сверхновой и появлению нейтронной звезды или чёрной дыры.
+              Эти процессы обогащают межзвёздную среду элементами и запускают рождение новых звёзд и планетных систем.
+            </div>
+
+            <ul class="log-list">
+              <li>Небольшая/средняя масса: гигант → оболочка сброшена → белый карлик.</li>
+              <li>Большая масса: сверхгигант → коллапс → сверхновая → нейтронная звезда / чёрная дыра.</li>
+              <li>Остатки могут быть источниками мощного излучения и гравитационных эффектов.</li>
+            </ul>
+          </article>
+
+          <aside class="sidebar-block" aria-label="Изображение и сводка финалов">
+            <div class="planet-image">
+              <img src="https://dummyimage.com/600x360/120814/bc13fe&text=Сверхновая+и+остатки" alt="Схема сверхновой и компактных объектов">
+              <div class="planet-image-caption">
+                Сверхновая и «компактные остатки»: нейтронная звезда или чёрная дыра; для менее массивных — белый карлик.
+              </div>
+            </div>
+
+            <div class="data-card">
+              <div class="data-title">Краткая сводка</div>
+              <table class="data-table">
+                <tr>
+                  <td>Путь 1</td>
+                  <td>белый карлик</td>
+                </tr>
+                <tr>
+                  <td>Путь 2</td>
+                  <td>нейтронная</td>
+                </tr>
+                <tr>
+                  <td>Путь 3</td>
+                  <td>чёрная дыра</td>
+                </tr>
+                <tr>
+                  <td>Триггер</td>
+                  <td>масса ядра</td>
+                </tr>
+              </table>
+            </div>
+          </aside>
+        </div>
       </section>
     </main>
+
+    <!-- правая панель -->
+    <aside class="side-panel side-panel--right" aria-label="Проверка знаний">
+      <div class="side-panel-title-main">
+        SOLARIS · ЗВЁЗДЫ
+      </div>
+      <div class="side-panel-subtitle">
+        <span>ПРОВЕРКА ЗНАНИЙ</span>
+        <span class="side-dot"></span>
+      </div>
+
+      <div class="quiz-body">
+        <div>
+          <div class="quiz-question">1. Какой спектральный класс самый горячий?</div>
+          <select id="q1" class="quiz-select">
+            <option value="">Выбери ответ</option>
+            <option value="M">M</option>
+            <option value="G">G</option>
+            <option value="O">O</option>
+          </select>
+        </div>
+
+        <div>
+          <div class="quiz-question">2. На каком этапе звезда проводит большую часть жизни?</div>
+          <select id="q2" class="quiz-select">
+            <option value="">Выбери ответ</option>
+            <option value="гигант">Красный гигант</option>
+            <option value="главная">Главная последовательность</option>
+            <option value="карлик">Белый карлик</option>
+          </select>
+        </div>
+
+        <div>
+          <div class="quiz-question">3. Чем обычно заканчивает жизнь звезда солнечной массы?</div>
+          <select id="q3" class="quiz-select">
+            <option value="">Выбери ответ</option>
+            <option value="белый">Белый карлик</option>
+            <option value="нейтронная">Нейтронная звезда</option>
+            <option value="дыра">Чёрная дыра</option>
+          </select>
+        </div>
+
+        <div class="quiz-buttons">
+          <button class="quiz-btn" id="quiz-check">Проверить</button>
+          <button class="quiz-btn" id="quiz-reset">Сбросить</button>
+        </div>
+
+        <div id="quiz-status" class="quiz-status">
+          Результат: — / 3
+        </div>
+      </div>
+    </aside>
   </div>
 
   <script src="/menu.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+  <script>
+    // звёздный фон: только Points
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(
+      75,
+      window.innerWidth / window.innerHeight,
+      0.1,
+      1000
+    );
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    document.getElementById('canvas-container').appendChild(renderer.domElement);
+
+    const starsGeometry = new THREE.BufferGeometry();
+    const starsCount = 5000;
+    const posArray = new Float32Array(starsCount * 3);
+    for (let i = 0; i < starsCount * 3; i++) {
+      posArray[i] = (Math.random() - 0.5) * 600;
+    }
+    starsGeometry.setAttribute(
+      'position',
+      new THREE.BufferAttribute(posArray, 3)
+    );
+    const starsMaterial = new THREE.PointsMaterial({
+      size: 0.15,
+      color: 0xffffff,
+      transparent: true,
+      opacity: 0.8
+    });
+    const starsMesh = new THREE.Points(starsGeometry, starsMaterial);
+    scene.add(starsMesh);
+
+    camera.position.set(0, 0, 40);
+    camera.lookAt(0, 0, 0);
+
+    function animate() {
+      requestAnimationFrame(animate);
+      starsMesh.rotation.y += 0.0002;
+      renderer.render(scene, camera);
+    }
+    animate();
+
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    // Квиз
+    (function() {
+      const q1 = document.getElementById('q1');
+      const q2 = document.getElementById('q2');
+      const q3 = document.getElementById('q3');
+      const status = document.getElementById('quiz-status');
+      const btnCheck = document.getElementById('quiz-check');
+      const btnReset = document.getElementById('quiz-reset');
+
+      function setStatus(text, cls) {
+        status.textContent = text;
+        status.classList.remove('quiz-status--bad', 'quiz-status--mid', 'quiz-status--good');
+        if (cls) status.classList.add(cls);
+      }
+
+      btnCheck.addEventListener('click', () => {
+        let score = 0;
+        if (q1.value === 'O') score++;
+        if (q2.value === 'главная') score++;
+        if (q3.value === 'белый') score++;
+
+        if (score === 0) {
+          setStatus('Результат: 0 / 3', 'quiz-status--bad');
+        } else if (score === 3) {
+          setStatus('Результат: 3 / 3', 'quiz-status--good');
+        } else {
+          setStatus(`Результат: ${score} / 3`, 'quiz-status--mid');
+        }
+      });
+
+      btnReset.addEventListener('click', () => {
+        q1.value = '';
+        q2.value = '';
+        q3.value = '';
+        setStatus('Результат: — / 3', '');
+      });
+    })();
+
+    // скролл по заметкам — с точным выравниванием по верхней линии боковых панелей
+    (function() {
+      const buttons = document.querySelectorAll('.notes-nav-button');
+      const ALIGN_TOP = 120;
+
+      function scrollToAligned(el) {
+        const y = el.getBoundingClientRect().top + window.scrollY - ALIGN_TOP;
+        window.scrollTo({ top: y, behavior: 'smooth' });
+      }
+
+      buttons.forEach(btn => {
+        btn.addEventListener('click', () => {
+          const id = btn.getAttribute('data-target');
+          const target = document.getElementById(id);
+          if (!target) return;
+          scrollToAligned(target);
+        });
+      });
+    })();
+  </script>
 </body>
 </html>
